@@ -262,7 +262,8 @@
         // Load data.json on startup
         async function loadDataJSON() {
             try {
-                const response = await fetch('data.json');
+                // Cache busting to always get latest data
+                const response = await fetch('data.json?t=' + Date.now());
                 if (response.ok) {
                     const data = await response.json();
                     if (data.results && data.results.length > 0) {

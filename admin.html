@@ -71,6 +71,7 @@
         <div class="tabs">
             <div class="tab active" onclick="switchTab('results')">📊 Poängställning</div>
             <div class="tab" onclick="switchTab('database')">📋 Resultatdatabas</div>
+            <div class="tab" onclick="switchTab('files')">📁 Uppladdade filer (<span id="file-count">0</span>)</div>
             <div class="tab" onclick="switchTab('overview')">📈 Översikt</div>
             <div class="tab" onclick="switchTab('manage')">⚙️ Hantera</div>
             <div class="tab" onclick="switchTab('riders')">👥 Deltagare (<span id="rider-count">0</span>)</div>
@@ -84,10 +85,9 @@
                     <input type="file" accept=".csv" onchange="handleCSVImport(event)">
                 </label>
                 <button class="btn btn-secondary" onclick="showSettings()">⚙️ Poängsystem</button>
-                <button class="btn btn-success" onclick="saveData()">💾 Spara fil</button>
-                <button class="btn btn-info" onclick="showDataJSON()">📋 Uppdatera data.json</button>
+                <button class="btn btn-success" onclick="saveDataJSON()">💾 Ladda hem data.json</button>
                 <label class="btn btn-purple">
-                    📥 Ladda
+                    📥 Ladda data.json
                     <input type="file" accept=".json" onchange="loadData(event)">
                 </label>
             </div>
@@ -171,6 +171,37 @@
                         </tr>
                     </thead>
                     <tbody id="database-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Files Tab -->
+        <div id="tab-files" class="tab-content hidden">
+            <div class="flex-between">
+                <p style="font-size: 0.875rem; color: #6b7280;">
+                    <span id="file-count-text">0</span> uppladdade filer
+                </p>
+                <div style="display: flex; gap: 0.5rem;">
+                    <input type="text" id="year-filter" placeholder="📅 Årtal/Säsong"
+                           style="width: 150px; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem;">
+                    <button class="btn btn-info" onclick="applyYearFilter()">Filtrera</button>
+                    <button class="btn btn-secondary" onclick="clearYearFilter()">Visa alla</button>
+                </div>
+            </div>
+            <div class="overflow-x">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Datum</th>
+                            <th>Filnamn</th>
+                            <th>Serie</th>
+                            <th>Event</th>
+                            <th>År/Säsong</th>
+                            <th>Resultat</th>
+                            <th>Åtgärd</th>
+                        </tr>
+                    </thead>
+                    <tbody id="files-body"></tbody>
                 </table>
             </div>
         </div>
@@ -317,6 +348,22 @@
         </div>
     </div>
 
+    <!-- Year Input Modal -->
+    <div id="year-modal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">Ange årtal/säsong</div>
+            <p style="margin-bottom: 1rem; color: #6b7280; font-size: 0.875rem;">
+                Ange årtal eller säsong för denna CSV-fil (t.ex. 2024, 2023/2024)
+            </p>
+            <input type="text" id="year-input" placeholder="t.ex. 2024"
+                   style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 1rem;">
+            <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                <button class="btn btn-success" onclick="confirmYearAndImport()">✓ Fortsätt import</button>
+                <button class="btn btn-secondary" onclick="closeYearModal()">Avbryt</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Data JSON Modal -->
     <div id="json-modal" class="modal">
         <div class="modal-content">
@@ -357,6 +404,9 @@
         let dbSortField = null;
         let dbSortDirection = 'asc';
         let dbSearchTerm = '';
+        let uploadedFiles = [];
+        let pendingCSVFile = null;
+        let yearFilter = null;
 
         // Extract event number for sorting
         function getEventNumber(eventName) {
@@ -376,13 +426,38 @@
             if (tabName === 'manage') renderManage();
             if (tabName === 'riders') renderRiders();
             if (tabName === 'database') renderDatabase();
+            if (tabName === 'files') renderFiles();
         }
 
-        // CSV Import
+        // CSV Import - Step 1: Ask for year
         function handleCSVImport(e) {
             const file = e.target.files[0];
             if (!file) return;
 
+            pendingCSVFile = file;
+            document.getElementById('year-input').value = new Date().getFullYear().toString();
+            document.getElementById('year-modal').classList.add('show');
+            e.target.value = '';
+        }
+
+        function closeYearModal() {
+            document.getElementById('year-modal').classList.remove('show');
+            pendingCSVFile = null;
+        }
+
+        // CSV Import - Step 2: Process file
+        function confirmYearAndImport() {
+            const year = document.getElementById('year-input').value.trim();
+            if (!year) {
+                alert('Du måste ange ett årtal eller säsong!');
+                return;
+            }
+
+            closeYearModal();
+            processCSVFile(pendingCSVFile, year);
+        }
+
+        function processCSVFile(file, year) {
             const reader = new FileReader();
             reader.onload = function(event) {
                 const lines = event.target.result.trim().split('\n');
@@ -390,6 +465,9 @@
 
                 const headers = lines[0].split(/[,;]/).map(h => h.trim().toLowerCase());
                 let localNextId = nextId;
+                let fileResults = [];
+                let fileSeries = new Set();
+                let fileEvents = new Set();
 
                 lines.slice(1).forEach(line => {
                     if (!line.trim()) return;
@@ -407,6 +485,9 @@
                     const tid = values[headers.indexOf('tid')] || values[headers.indexOf('time')] || '';
 
                     if (!fornamn || !efternamn || !placering || !serie || !klass || !deltavling) return;
+
+                    fileSeries.add(serie);
+                    fileEvents.add(deltavling);
 
                     // Find or create rider
                     let riderId = null;
@@ -435,21 +516,35 @@
                     // Add event
                     const eventKey = `${serie}|||${deltavling}`;
                     if (!events[eventKey]) {
-                        events[eventKey] = { serie, deltavling, pointSystem, classes: [] };
+                        events[eventKey] = { serie, deltavling, pointSystem, classes: [], year };
                     }
                     if (!events[eventKey].classes.includes(klass)) {
                         events[eventKey].classes.push(klass);
                     }
 
                     // Add result
-                    results.push({ riderId, fornamn, efternamn, klubb, serie, klass, deltavling, placering, tid });
+                    const resultData = { riderId, fornamn, efternamn, klubb, serie, klass, deltavling, placering, tid, year };
+                    results.push(resultData);
+                    fileResults.push(resultData);
+                });
+
+                // Track uploaded file
+                uploadedFiles.push({
+                    id: Date.now(),
+                    filename: file.name,
+                    date: new Date().toISOString(),
+                    series: Array.from(fileSeries).join(', '),
+                    events: Array.from(fileEvents).join(', '),
+                    year: year,
+                    resultCount: fileResults.length,
+                    resultIds: fileResults.map((_, idx) => results.length - fileResults.length + idx)
                 });
 
                 nextId = localNextId;
                 updateUI();
+                autoSaveDataJSON();
             };
             reader.readAsText(file);
-            e.target.value = '';
         }
 
         // Get points
@@ -602,6 +697,8 @@
             document.getElementById('rider-count').textContent = Object.keys(riders).length;
             document.getElementById('result-count').textContent = results.length;
             document.getElementById('database-count').textContent = results.length;
+            document.getElementById('file-count').textContent = uploadedFiles.length;
+            document.getElementById('file-count-text').textContent = uploadedFiles.length;
 
             if (hasData) {
                 // Update serie select for standings
@@ -733,7 +830,130 @@
                 results.splice(index, 1);
                 renderManage();
                 updateUI();
+                autoSaveDataJSON();
             }
+        }
+
+        // Files management
+        function renderFiles() {
+            const tbody = document.getElementById('files-body');
+            tbody.innerHTML = '';
+
+            let filesToShow = uploadedFiles;
+            if (yearFilter) {
+                filesToShow = uploadedFiles.filter(f => f.year === yearFilter);
+            }
+
+            filesToShow.reverse().forEach(file => {
+                const date = new Date(file.date).toLocaleDateString('sv-SE');
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-size: 0.875rem;">${date}</td>
+                    <td style="font-weight: 600;">${file.filename}</td>
+                    <td>${file.series}</td>
+                    <td>${file.events}</td>
+                    <td><span class="badge">${file.year}</span></td>
+                    <td style="text-align: center;">${file.resultCount}</td>
+                    <td>
+                        <button class="icon-btn btn-info" onclick="downloadFileData(${file.id})" title="Ladda hem fil">
+                            💾 Ladda hem
+                        </button>
+                        <button class="icon-btn btn-delete" onclick="deleteFile(${file.id})" title="Radera">
+                            🗑 Radera
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function applyYearFilter() {
+            const input = document.getElementById('year-filter').value.trim();
+            if (input) {
+                yearFilter = input;
+                renderFiles();
+            }
+        }
+
+        function clearYearFilter() {
+            yearFilter = null;
+            document.getElementById('year-filter').value = '';
+            renderFiles();
+        }
+
+        function downloadFileData(fileId) {
+            const file = uploadedFiles.find(f => f.id === fileId);
+            if (!file) return;
+
+            // Get results for this file
+            const fileData = {
+                filename: file.filename,
+                date: file.date,
+                year: file.year,
+                series: file.series,
+                events: file.events,
+                results: file.resultIds.map(idx => results[idx]).filter(r => r)
+            };
+
+            const blob = new Blob([JSON.stringify(fileData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${file.filename.replace('.csv', '')}_${file.year}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function deleteFile(fileId) {
+            const file = uploadedFiles.find(f => f.id === fileId);
+            if (!file) return;
+
+            if (!confirm(`Är du säker på att du vill radera "${file.filename}" (${file.resultCount} resultat)?`)) {
+                return;
+            }
+
+            // Remove results associated with this file
+            const indicesToRemove = new Set(file.resultIds);
+            results = results.filter((_, idx) => !indicesToRemove.has(idx));
+
+            // Update all resultIds in remaining files
+            uploadedFiles.forEach(f => {
+                f.resultIds = f.resultIds.map(idx => {
+                    let newIdx = idx;
+                    indicesToRemove.forEach(removedIdx => {
+                        if (idx > removedIdx) newIdx--;
+                    });
+                    return newIdx;
+                }).filter(idx => !indicesToRemove.has(idx));
+            });
+
+            // Remove the file entry
+            uploadedFiles = uploadedFiles.filter(f => f.id !== fileId);
+
+            // Clean up events and riders if needed
+            cleanupUnusedData();
+
+            renderFiles();
+            updateUI();
+            autoSaveDataJSON();
+        }
+
+        function cleanupUnusedData() {
+            // Remove events with no results
+            const usedEvents = new Set(results.map(r => `${r.serie}|||${r.deltavling}`));
+            Object.keys(events).forEach(key => {
+                if (!usedEvents.has(key)) {
+                    delete events[key];
+                }
+            });
+
+            // Remove riders with no results
+            const usedRiders = new Set(results.map(r => r.riderId));
+            Object.keys(riders).forEach(id => {
+                if (!usedRiders.has(id)) {
+                    delete riders[id];
+                }
+            });
         }
 
         // Database tab functions
@@ -774,28 +994,33 @@
 
         function updateDatabaseFilters() {
             const selectedSerie = document.getElementById('db-serie-select').value;
+            const selectedEvent = document.getElementById('db-event-select').value;
             const eventSelect = document.getElementById('db-event-select');
             const klassSelect = document.getElementById('db-klass-select');
 
-            // Update event select based on serie
-            eventSelect.innerHTML = '<option value="all">Alla events</option>';
-            klassSelect.innerHTML = '<option value="all">Alla klasser</option>';
+            // If serie changed, update event dropdown
+            if (event && event.target === document.getElementById('db-serie-select')) {
+                eventSelect.innerHTML = '<option value="all">Alla events</option>';
+                klassSelect.innerHTML = '<option value="all">Alla klasser</option>';
 
+                if (selectedSerie !== 'all') {
+                    const serieEvents = [...new Set(results
+                        .filter(r => r.serie === selectedSerie)
+                        .map(r => r.deltavling))]
+                        .sort((a, b) => getEventNumber(a) - getEventNumber(b));
+
+                    serieEvents.forEach(e => {
+                        const opt = document.createElement('option');
+                        opt.value = e;
+                        opt.textContent = e;
+                        eventSelect.appendChild(opt);
+                    });
+                }
+            }
+
+            // Update class select based on serie and event
             if (selectedSerie !== 'all') {
-                const serieEvents = [...new Set(results
-                    .filter(r => r.serie === selectedSerie)
-                    .map(r => r.deltavling))]
-                    .sort((a, b) => getEventNumber(a) - getEventNumber(b));
-
-                serieEvents.forEach(e => {
-                    const opt = document.createElement('option');
-                    opt.value = e;
-                    opt.textContent = e;
-                    eventSelect.appendChild(opt);
-                });
-
-                // Update class select
-                const selectedEvent = eventSelect.value;
+                klassSelect.innerHTML = '<option value="all">Alla klasser</option>';
                 const klasses = [...new Set(results
                     .filter(r => r.serie === selectedSerie && (selectedEvent === 'all' || r.deltavling === selectedEvent))
                     .map(r => r.klass))];
@@ -1356,21 +1581,27 @@
         }
 
         // Save/Load
-        function saveData() {
+        function saveDataJSON() {
             const data = {
                 riders,
                 results,
                 events,
                 serieSettings,
-                invalidResults: Array.from(invalidResults)
+                invalidResults: Array.from(invalidResults),
+                uploadedFiles
             };
-            const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `kvalpoang_${new Date().toISOString().split('T')[0]}.json`;
+            a.download = 'data.json';
             a.click();
             URL.revokeObjectURL(url);
+        }
+
+        function autoSaveDataJSON() {
+            // Automatically download data.json after changes
+            saveDataJSON();
         }
 
         function loadData(e) {
@@ -1385,35 +1616,11 @@
                 events = data.events || {};
                 serieSettings = data.serieSettings || {};
                 invalidResults = new Set(data.invalidResults || []);
+                uploadedFiles = data.uploadedFiles || [];
                 updateUI();
             };
             reader.readAsText(file);
             e.target.value = '';
-        }
-
-        // Show data.json content
-        function showDataJSON() {
-            const data = {
-                riders,
-                results,
-                events,
-                serieSettings,
-                invalidResults: Array.from(invalidResults)
-            };
-            const jsonStr = JSON.stringify(data, null, 2);
-            document.getElementById('json-content').value = jsonStr;
-            document.getElementById('json-modal').classList.add('show');
-        }
-
-        function copyJSON() {
-            const textarea = document.getElementById('json-content');
-            textarea.select();
-            document.execCommand('copy');
-            alert('JSON kopierad till urklipp! Klistra in i data.json filen.');
-        }
-
-        function closeDataJSON() {
-            document.getElementById('json-modal').classList.remove('show');
         }
 
         // Load data.json on startup
@@ -1428,6 +1635,7 @@
                         events = data.events || {};
                         serieSettings = data.serieSettings || {};
                         invalidResults = new Set(data.invalidResults || []);
+                        uploadedFiles = data.uploadedFiles || [];
                         updateUI();
                     }
                 }
