@@ -147,13 +147,28 @@
 
         <!-- Riders Tab -->
         <div id="tab-riders" class="tab-content hidden">
-            <button class="btn btn-purple" onclick="showDuplicates()" style="margin-bottom: 1rem;">Visa dubbletter</button>
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                <button class="btn btn-purple" onclick="showDuplicates()">Visa exakta dubbletter</button>
+                <button class="btn btn-secondary" onclick="showSimilarNames()">Hitta liknande namn</button>
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+                <input type="text" id="rider-search" placeholder="🔍 Sök efter namn eller klubb..."
+                       oninput="filterRiders()"
+                       style="width: 100%; padding: 0.75rem; font-size: 1rem; border: 2px solid #e5e7eb; border-radius: 0.375rem;">
+            </div>
+
             <div class="overflow-x">
                 <table>
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Namn</th>
+                            <th style="cursor: pointer;" onclick="sortRiders('fornamn')" title="Klicka för att sortera">
+                                Förnamn <span id="sort-fornamn-indicator"></span>
+                            </th>
+                            <th style="cursor: pointer;" onclick="sortRiders('efternamn')" title="Klicka för att sortera">
+                                Efternamn <span id="sort-efternamn-indicator"></span>
+                            </th>
                             <th>Klubb</th>
                             <th>Resultat</th>
                             <th>Åtgärd</th>
@@ -180,6 +195,15 @@
             <div class="modal-header">Dubbletter funna</div>
             <div id="duplicates-content"></div>
             <button class="btn btn-secondary" onclick="closeDuplicates()" style="margin-top: 1rem;">Stäng</button>
+        </div>
+    </div>
+
+    <!-- Similar Names Modal -->
+    <div id="similar-names-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Liknande namn (möjliga felstavningar)</div>
+            <div id="similar-names-content"></div>
+            <button class="btn btn-secondary" onclick="closeSimilarNames()" style="margin-top: 1rem;">Stäng</button>
         </div>
     </div>
 
@@ -249,6 +273,9 @@
         let invalidResults = new Set();
         let nextId = 1000;
         let currentRiderId = null;
+        let riderSortField = 'fornamn';
+        let riderSortDirection = 'asc';
+        let riderSearchTerm = '';
 
         // Extract event number for sorting
         function getEventNumber(eventName) {
@@ -613,12 +640,94 @@
             }
         }
 
+        // Levenshtein distance for fuzzy matching
+        function levenshteinDistance(a, b) {
+            const matrix = [];
+            for (let i = 0; i <= b.length; i++) {
+                matrix[i] = [i];
+            }
+            for (let j = 0; j <= a.length; j++) {
+                matrix[0][j] = j;
+            }
+            for (let i = 1; i <= b.length; i++) {
+                for (let j = 1; j <= a.length; j++) {
+                    if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i - 1][j - 1] + 1,
+                            matrix[i][j - 1] + 1,
+                            matrix[i - 1][j] + 1
+                        );
+                    }
+                }
+            }
+            return matrix[b.length][a.length];
+        }
+
+        // Filter riders based on search
+        function filterRiders() {
+            riderSearchTerm = document.getElementById('rider-search').value;
+            renderRiders();
+        }
+
+        // Sort riders
+        function sortRiders(field) {
+            if (riderSortField === field) {
+                riderSortDirection = riderSortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                riderSortField = field;
+                riderSortDirection = 'asc';
+            }
+            renderRiders();
+        }
+
+        // Get filtered and sorted riders
+        function getFilteredSortedRiders() {
+            let ridersList = Object.entries(riders);
+
+            // Filter
+            if (riderSearchTerm) {
+                const term = riderSearchTerm.toLowerCase();
+                ridersList = ridersList.filter(([id, r]) => {
+                    const fullName = `${r.fornamn} ${r.efternamn}`.toLowerCase();
+                    const klubb = r.klubb.toLowerCase();
+                    return fullName.includes(term) || klubb.includes(term) || id.toLowerCase().includes(term);
+                });
+            }
+
+            // Sort
+            ridersList.sort(([idA, rA], [idB, rB]) => {
+                let valA = rA[riderSortField] || '';
+                let valB = rB[riderSortField] || '';
+
+                valA = valA.toString().toLowerCase();
+                valB = valB.toString().toLowerCase();
+
+                if (riderSortDirection === 'asc') {
+                    return valA > valB ? 1 : -1;
+                } else {
+                    return valA < valB ? 1 : -1;
+                }
+            });
+
+            return ridersList;
+        }
+
         // Render riders
         function renderRiders() {
             const tbody = document.getElementById('riders-body');
             tbody.innerHTML = '';
 
-            Object.entries(riders).forEach(([id, r]) => {
+            // Update sort indicators
+            document.getElementById('sort-fornamn-indicator').textContent =
+                riderSortField === 'fornamn' ? (riderSortDirection === 'asc' ? '↑' : '↓') : '';
+            document.getElementById('sort-efternamn-indicator').textContent =
+                riderSortField === 'efternamn' ? (riderSortDirection === 'asc' ? '↑' : '↓') : '';
+
+            const ridersList = getFilteredSortedRiders();
+
+            ridersList.forEach(([id, r]) => {
                 const resultCount = results.filter(res => res.riderId === id).length;
                 const tr = document.createElement('tr');
 
@@ -626,7 +735,8 @@
                     <td style="font-family: monospace; font-size: 0.75rem;">
                         ${id}${id.startsWith('TEMP') ? ' <span style="color: #eab308;">(Temp)</span>' : ''}
                     </td>
-                    <td>${r.fornamn} ${r.efternamn}</td>
+                    <td>${r.fornamn}</td>
+                    <td>${r.efternamn}</td>
                     <td>${r.klubb}</td>
                     <td>${resultCount}</td>
                     <td>
@@ -829,6 +939,111 @@
 
         function closeDuplicates() {
             document.getElementById('duplicates-modal').classList.remove('show');
+        }
+
+        // Similar names (fuzzy matching)
+        function showSimilarNames() {
+            const groups = findSimilarNames();
+            const content = document.getElementById('similar-names-content');
+
+            if (groups.length === 0) {
+                content.innerHTML = '<p style="color: #10b981;">Inga liknande namn hittades! ✓</p>';
+            } else {
+                content.innerHTML = '<p style="margin-bottom: 1rem; color: #6b7280; font-size: 0.875rem;">Dessa namn liknar varandra och kan vara felstavningar. Kontrollera och slå ihop vid behov.</p>';
+                groups.forEach((group, idx) => {
+                    const div = document.createElement('div');
+                    div.style.marginBottom = '1rem';
+                    div.style.padding = '1rem';
+                    div.style.background = '#fef3c7';
+                    div.style.border = '1px solid #fbbf24';
+                    div.style.borderRadius = '0.375rem';
+
+                    div.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <h4 style="font-weight: 600;">Grupp ${idx + 1} (${group.length} st) - Likhet: ${group[0].similarity}%</h4>
+                            <button class="btn btn-primary" onclick="mergeSimilarGroup(${idx})">Slå ihop</button>
+                        </div>
+                        ${group.map(({id, rider}) => `
+                            <div style="font-size: 0.875rem; margin-left: 1rem;">
+                                • ${rider.fornamn} ${rider.efternamn} - ${rider.klubb} (${id})
+                            </div>
+                        `).join('')}
+                    `;
+
+                    content.appendChild(div);
+                });
+            }
+
+            window.similarNameGroups = groups;
+            document.getElementById('similar-names-modal').classList.add('show');
+        }
+
+        function findSimilarNames() {
+            const groups = [];
+            const processed = new Set();
+            const riderList = Object.entries(riders);
+            const threshold = 3; // Max Levenshtein distance
+
+            riderList.forEach(([id1, r1]) => {
+                if (processed.has(id1)) return;
+
+                const group = [{ id: id1, rider: r1 }];
+                let maxDistance = 0;
+
+                riderList.forEach(([id2, r2]) => {
+                    if (id1 === id2 || processed.has(id2)) return;
+
+                    // Check both first and last name
+                    const fornamnDist = levenshteinDistance(
+                        r1.fornamn.toLowerCase(),
+                        r2.fornamn.toLowerCase()
+                    );
+                    const efternamnDist = levenshteinDistance(
+                        r1.efternamn.toLowerCase(),
+                        r2.efternamn.toLowerCase()
+                    );
+
+                    // Similar if either name is close and the other matches exactly, or both are close
+                    if ((fornamnDist <= threshold && r1.efternamn.toLowerCase() === r2.efternamn.toLowerCase()) ||
+                        (efternamnDist <= threshold && r1.fornamn.toLowerCase() === r2.fornamn.toLowerCase()) ||
+                        (fornamnDist <= 2 && efternamnDist <= 2)) {
+                        group.push({ id: id2, rider: r2 });
+                        maxDistance = Math.max(maxDistance, fornamnDist + efternamnDist);
+                    }
+                });
+
+                if (group.length > 1) {
+                    // Calculate similarity percentage
+                    const avgNameLength = (r1.fornamn.length + r1.efternamn.length) / 2;
+                    const similarity = Math.round(100 - (maxDistance / avgNameLength) * 100);
+
+                    group.forEach(item => {
+                        item.similarity = similarity;
+                        processed.add(item.id);
+                    });
+                    groups.push(group);
+                }
+            });
+
+            return groups.sort((a, b) => b[0].similarity - a[0].similarity);
+        }
+
+        function mergeSimilarGroup(groupIndex) {
+            const group = window.similarNameGroups[groupIndex];
+            const keepId = group.find(item => !item.id.startsWith('TEMP'))?.id || group[0].id;
+            const removeIds = group.filter(item => item.id !== keepId).map(item => item.id);
+
+            removeIds.forEach(id => delete riders[id]);
+            results = results.map(r =>
+                removeIds.includes(r.riderId) ? { ...r, riderId: keepId } : r
+            );
+
+            showSimilarNames(); // Refresh
+            renderRiders();
+        }
+
+        function closeSimilarNames() {
+            document.getElementById('similar-names-modal').classList.remove('show');
         }
 
         // Save/Load
