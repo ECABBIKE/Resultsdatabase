@@ -7,7 +7,7 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(to bottom right, #eff6ff, #e0e7ff); min-height: 100vh; padding: 1rem; }
-        .container { max-width: 1280px; margin: 0 auto; background: white; border-radius: 0.5rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); padding: 1.5rem; }
+        .container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 0.5rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); padding: 1.5rem; }
         h1 { font-size: 1.875rem; font-weight: bold; margin-bottom: 1.5rem; }
         .tabs { display: flex; gap: 0.5rem; border-bottom: 1px solid #e5e7eb; margin-bottom: 1.5rem; overflow-x: auto; }
         .tab { padding: 0.5rem 1rem; cursor: pointer; white-space: nowrap; border-bottom: 2px solid transparent; color: #6b7280; }
@@ -19,17 +19,20 @@
         .btn-success { background: #10b981; }
         .btn-danger { background: #ef4444; }
         .btn-purple { background: #9333ea; }
+        .btn-info { background: #0ea5e9; }
         .btn:hover { opacity: 0.9; }
         input[type="file"] { display: none; }
         select, input[type="number"], input[type="text"] { padding: 0.5rem 1rem; border: 1px solid #d1d5db; border-radius: 0.375rem; width: 100%; }
         table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
-        th { background: #4f46e5; color: white; padding: 0.5rem; text-align: left; }
+        th { background: #4f46e5; color: white; padding: 0.5rem; text-align: left; white-space: nowrap; }
+        th.event-col { text-align: center; font-size: 0.75rem; }
+        th.total-col { background: #3730a3; text-align: center; }
         td { padding: 0.5rem; border-bottom: 1px solid #e5e7eb; }
         tr:nth-child(even) { background: #f9fafb; }
         .overflow-x { overflow-x: auto; }
         .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; padding: 1rem; z-index: 1000; }
         .modal.show { display: flex; }
-        .modal-content { background: white; border-radius: 0.5rem; padding: 1.5rem; max-width: 48rem; width: 100%; max-height: 90vh; overflow-y: auto; }
+        .modal-content { background: white; border-radius: 0.5rem; padding: 1.5rem; max-width: 56rem; width: 100%; max-height: 90vh; overflow-y: auto; }
         .modal-header { font-size: 1.25rem; font-weight: bold; margin-bottom: 1rem; }
         .info-box { background: #dbeafe; padding: 1.5rem; border-radius: 0.375rem; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
@@ -42,11 +45,17 @@
         .stat-card .label { font-size: 0.875rem; color: #6b7280; }
         .badge { display: inline-block; padding: 0.25rem 0.5rem; background: #e0e7ff; border-radius: 0.25rem; font-size: 0.875rem; }
         .flex-between { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-        .icon-btn { padding: 0.25rem; border: none; border-radius: 0.25rem; cursor: pointer; color: white; font-size: 0.75rem; }
+        .icon-btn { padding: 0.25rem 0.5rem; border: none; border-radius: 0.25rem; cursor: pointer; color: white; font-size: 0.75rem; margin-right: 0.25rem; }
         .btn-edit { background: #3b82f6; }
         .btn-delete { background: #ef4444; }
         .btn-warn { background: #eab308; }
         .hidden { display: none; }
+        .event-points { font-weight: bold; color: #4f46e5; }
+        .event-position { font-size: 0.75rem; color: #6b7280; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 0.25rem; font-size: 0.875rem; }
+        .rider-results-table { margin-top: 1.5rem; }
+        .rider-results-table h3 { margin-bottom: 0.75rem; font-size: 1.125rem; }
     </style>
 </head>
 <body>
@@ -90,13 +99,13 @@
                 </div>
                 <div class="overflow-x">
                     <table id="standings-table">
-                        <thead>
+                        <thead id="standings-head">
                             <tr>
                                 <th>Plac</th>
                                 <th>Namn</th>
                                 <th id="klass-header" class="hidden">Klass</th>
                                 <th>Klubb</th>
-                                <th>Total</th>
+                                <th class="total-col">Total</th>
                             </tr>
                         </thead>
                         <tbody id="standings-body"></tbody>
@@ -147,6 +156,7 @@
                             <th>Namn</th>
                             <th>Klubb</th>
                             <th>Resultat</th>
+                            <th>Åtgärd</th>
                         </tr>
                     </thead>
                     <tbody id="riders-body"></tbody>
@@ -173,6 +183,55 @@
         </div>
     </div>
 
+    <!-- Rider Details Modal -->
+    <div id="rider-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Deltagardetaljer</div>
+            <div id="rider-details-content">
+                <div class="form-group">
+                    <label>UCI ID</label>
+                    <input type="text" id="rider-uci" readonly style="background: #f3f4f6;">
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Förnamn</label>
+                        <input type="text" id="rider-fornamn">
+                    </div>
+                    <div class="form-group">
+                        <label>Efternamn</label>
+                        <input type="text" id="rider-efternamn">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Klubb</label>
+                    <input type="text" id="rider-klubb">
+                </div>
+
+                <div class="rider-results-table">
+                    <h3>Deltävlingar</h3>
+                    <div class="overflow-x">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Serie</th>
+                                    <th>Klass</th>
+                                    <th>Deltävling</th>
+                                    <th>Placering</th>
+                                    <th>Poäng</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rider-results-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top: 1.5rem; display: flex; gap: 0.5rem;">
+                <button class="btn btn-success" onclick="saveRiderDetails()">💾 Spara ändringar</button>
+                <button class="btn btn-secondary" onclick="closeRiderDetails()">Stäng</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Point systems
         const POINT_SYSTEMS = {
@@ -189,6 +248,13 @@
         let serieSettings = {};
         let invalidResults = new Set();
         let nextId = 1000;
+        let currentRiderId = null;
+
+        // Extract event number for sorting
+        function getEventNumber(eventName) {
+            const match = eventName.match(/#?(\d+)/);
+            return match ? parseInt(match[1]) : 999;
+        }
 
         // Tab switching
         function switchTab(tabName) {
@@ -325,6 +391,23 @@
             return Object.values(standings).sort((a, b) => b.total - a.total);
         }
 
+        // Get sorted event list
+        function getSortedEvents(selectedSerie, selectedKlass) {
+            if (selectedSerie === 'all') return [];
+
+            const eventSet = new Set(
+                results
+                    .filter(r => r.serie === selectedSerie && (selectedKlass === 'all' || r.klass === selectedKlass))
+                    .map(r => r.deltavling)
+            );
+
+            return Array.from(eventSet).sort((a, b) => {
+                const numA = getEventNumber(a);
+                const numB = getEventNumber(b);
+                return numA - numB;
+            });
+        }
+
         // Update filters
         function updateFilters() {
             const selectedSerie = document.getElementById('serie-select').value;
@@ -353,30 +436,52 @@
         function updateStandings() {
             const standings = getStandings();
             const tbody = document.getElementById('standings-body');
+            const thead = document.getElementById('standings-head');
             const selectedKlass = document.getElementById('klass-select').value;
             const selectedSerie = document.getElementById('serie-select').value;
 
-            tbody.innerHTML = '';
+            const eventList = getSortedEvents(selectedSerie, selectedKlass);
 
+            // Update header
+            let headerHTML = `
+                <tr>
+                    <th>Plac</th>
+                    <th>Namn</th>
+                    ${selectedKlass === 'all' && selectedSerie !== 'all' ? '<th>Klass</th>' : ''}
+                    <th>Klubb</th>`;
+
+            eventList.forEach(e => {
+                headerHTML += `<th class="event-col">${e}</th>`;
+            });
+
+            headerHTML += `<th class="total-col">Total</th></tr>`;
+            thead.innerHTML = headerHTML;
+
+            // Update body
+            tbody.innerHTML = '';
             standings.forEach((r, i) => {
                 const tr = document.createElement('tr');
-                tr.innerHTML = `
+                let rowHTML = `
                     <td style="font-weight: bold;">${i + 1}</td>
                     <td>${r.fornamn} ${r.efternamn}</td>
                     ${selectedKlass === 'all' && selectedSerie !== 'all' ? `<td><span class="badge">${r.klass}</span></td>` : ''}
-                    <td style="font-size: 0.875rem;">${r.klubb}</td>
-                    <td style="font-weight: bold; color: #4f46e5; background: #eff6ff; text-align: center;">${r.total}</td>
-                `;
+                    <td style="font-size: 0.875rem;">${r.klubb}</td>`;
+
+                eventList.forEach(e => {
+                    if (r.eventResults[e]) {
+                        rowHTML += `<td style="text-align: center;">
+                            <div class="event-points">${r.eventResults[e].points}p</div>
+                            <div class="event-position">(${r.eventResults[e].placering})</div>
+                        </td>`;
+                    } else {
+                        rowHTML += `<td style="text-align: center; color: #d1d5db;">-</td>`;
+                    }
+                });
+
+                rowHTML += `<td style="font-weight: bold; color: #4f46e5; background: #eff6ff; text-align: center;">${r.total}</td>`;
+                tr.innerHTML = rowHTML;
                 tbody.appendChild(tr);
             });
-
-            // Show/hide klass column
-            const klassHeader = document.getElementById('klass-header');
-            if (selectedKlass === 'all' && selectedSerie !== 'all') {
-                klassHeader.classList.remove('hidden');
-            } else {
-                klassHeader.classList.add('hidden');
-            }
         }
 
         // Update UI
@@ -524,9 +629,83 @@
                     <td>${r.fornamn} ${r.efternamn}</td>
                     <td>${r.klubb}</td>
                     <td>${resultCount}</td>
+                    <td>
+                        <button class="icon-btn btn-info" onclick="showRiderDetails('${id}')" title="Visa detaljer">
+                            👁️ Detaljer
+                        </button>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
+        }
+
+        // Rider details modal
+        function showRiderDetails(riderId) {
+            currentRiderId = riderId;
+            const rider = riders[riderId];
+
+            document.getElementById('rider-uci').value = rider.uciId;
+            document.getElementById('rider-fornamn').value = rider.fornamn;
+            document.getElementById('rider-efternamn').value = rider.efternamn;
+            document.getElementById('rider-klubb').value = rider.klubb;
+
+            // Get all results for this rider
+            const riderResults = results.filter(r => r.riderId === riderId);
+            const tbody = document.getElementById('rider-results-body');
+            tbody.innerHTML = '';
+
+            riderResults.forEach(r => {
+                const eventKey = `${r.serie}|||${r.deltavling}`;
+                const event = events[eventKey];
+                const points = event ? getPoints(r.placering, event.pointSystem) : 0;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${r.serie}</td>
+                    <td>${r.klass}</td>
+                    <td>${r.deltavling}</td>
+                    <td style="text-align: center; font-weight: 600;">${r.placering}</td>
+                    <td style="text-align: center; color: #4f46e5; font-weight: bold;">${points}p</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('rider-modal').classList.add('show');
+        }
+
+        function saveRiderDetails() {
+            if (!currentRiderId) return;
+
+            const fornamn = document.getElementById('rider-fornamn').value.trim();
+            const efternamn = document.getElementById('rider-efternamn').value.trim();
+            const klubb = document.getElementById('rider-klubb').value.trim();
+
+            if (!fornamn || !efternamn) {
+                alert('Förnamn och efternamn måste fyllas i!');
+                return;
+            }
+
+            // Update rider
+            riders[currentRiderId].fornamn = fornamn;
+            riders[currentRiderId].efternamn = efternamn;
+            riders[currentRiderId].klubb = klubb;
+
+            // Update all results for this rider
+            results = results.map(r => {
+                if (r.riderId === currentRiderId) {
+                    return { ...r, fornamn, efternamn, klubb };
+                }
+                return r;
+            });
+
+            closeRiderDetails();
+            renderRiders();
+            updateStandings();
+        }
+
+        function closeRiderDetails() {
+            document.getElementById('rider-modal').classList.remove('show');
+            currentRiderId = null;
         }
 
         // Settings modal
