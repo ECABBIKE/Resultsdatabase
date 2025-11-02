@@ -259,6 +259,28 @@
             e.target.value = '';
         }
 
+        // Load data.json on startup
+        async function loadDataJSON() {
+            try {
+                const response = await fetch('data.json');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.results && data.results.length > 0) {
+                        riders = data.riders || {};
+                        results = data.results || [];
+                        events = data.events || {};
+                        serieSettings = data.serieSettings || {};
+                        invalidResults = new Set(data.invalidResults || []);
+                        updateUI();
+                    }
+                }
+            } catch (error) {
+                console.log('No data.json file found or error loading it');
+            }
+        }
+
+        // Initialize
+        loadDataJSON();
         updateUI();
     </script>
 </body>

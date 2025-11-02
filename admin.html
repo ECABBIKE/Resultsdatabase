@@ -84,7 +84,8 @@
                     <input type="file" accept=".csv" onchange="handleCSVImport(event)">
                 </label>
                 <button class="btn btn-secondary" onclick="showSettings()">⚙️ Poängsystem</button>
-                <button class="btn btn-success" onclick="saveData()">💾 Spara</button>
+                <button class="btn btn-success" onclick="saveData()">💾 Spara fil</button>
+                <button class="btn btn-info" onclick="showDataJSON()">📋 Uppdatera data.json</button>
                 <label class="btn btn-purple">
                     📥 Ladda
                     <input type="file" accept=".json" onchange="loadData(event)">
@@ -123,6 +124,17 @@
 
         <!-- Database Tab -->
         <div id="tab-database" class="tab-content hidden">
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-bottom: 1rem;">
+                <select id="db-serie-select" onchange="updateDatabaseFilters()">
+                    <option value="all">Alla serier</option>
+                </select>
+                <select id="db-event-select" onchange="updateDatabaseFilters()">
+                    <option value="all">Alla events</option>
+                </select>
+                <select id="db-klass-select" onchange="renderDatabase()">
+                    <option value="all">Alla klasser</option>
+                </select>
+            </div>
             <div class="flex-between">
                 <p style="font-size: 0.875rem; color: #6b7280;">
                     Visar <span id="database-count">0</span> resultat
@@ -154,6 +166,7 @@
                             <th style="cursor: pointer;" onclick="sortDatabase('tid')">
                                 Tid <span id="db-sort-tid"></span>
                             </th>
+                            <th>+Tid</th>
                             <th>Poäng</th>
                         </tr>
                     </thead>
@@ -300,6 +313,23 @@
             <div style="margin-top: 1.5rem; display: flex; gap: 0.5rem;">
                 <button class="btn btn-success" onclick="saveRiderDetails()">💾 Spara ändringar</button>
                 <button class="btn btn-secondary" onclick="closeRiderDetails()">Stäng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data JSON Modal -->
+    <div id="json-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Uppdatera data.json</div>
+            <p style="margin-bottom: 1rem; color: #6b7280; font-size: 0.875rem;">
+                Kopiera innehållet nedan och ersätt innehållet i filen <code style="background: #f3f4f6; padding: 0.25rem 0.5rem; border-radius: 0.25rem;">data.json</code> med detta.
+                Detta gör att den offentliga sidan automatiskt kan visa den senaste datan.
+            </p>
+            <textarea id="json-content" readonly
+                      style="width: 100%; height: 300px; font-family: monospace; font-size: 0.75rem; padding: 1rem; border: 1px solid #d1d5db; border-radius: 0.375rem; background: #f9fafb;"></textarea>
+            <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                <button class="btn btn-success" onclick="copyJSON()">📋 Kopiera till urklipp</button>
+                <button class="btn btn-secondary" onclick="closeDataJSON()">Stäng</button>
             </div>
         </div>
     </div>
@@ -574,7 +604,7 @@
             document.getElementById('database-count').textContent = results.length;
 
             if (hasData) {
-                // Update serie select
+                // Update serie select for standings
                 const serieSelect = document.getElementById('serie-select');
                 serieSelect.innerHTML = '<option value="all">Alla serier</option>';
                 const series = [...new Set(results.map(r => r.serie))];
@@ -584,6 +614,18 @@
                     opt.textContent = s;
                     serieSelect.appendChild(opt);
                 });
+
+                // Update database serie select
+                const dbSerieSelect = document.getElementById('db-serie-select');
+                if (dbSerieSelect) {
+                    dbSerieSelect.innerHTML = '<option value="all">Alla serier</option>';
+                    series.forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = s;
+                        opt.textContent = s;
+                        dbSerieSelect.appendChild(opt);
+                    });
+                }
 
                 updateStandings();
             }
@@ -710,9 +752,72 @@
             renderDatabase();
         }
 
+        function parseTimeToSeconds(timeStr) {
+            if (!timeStr || timeStr === '-') return null;
+            // Support formats: MM:SS.mmm, MM:SS, SS.mmm, SS
+            const parts = timeStr.split(':');
+            let seconds = 0;
+            if (parts.length === 2) {
+                // MM:SS or MM:SS.mmm
+                seconds = parseInt(parts[0]) * 60 + parseFloat(parts[1]);
+            } else {
+                // SS or SS.mmm
+                seconds = parseFloat(parts[0]);
+            }
+            return isNaN(seconds) ? null : seconds;
+        }
+
+        function formatTimeDiff(seconds) {
+            if (!seconds || seconds === 0) return '-';
+            return `+${seconds.toFixed(3)}s`;
+        }
+
+        function updateDatabaseFilters() {
+            const selectedSerie = document.getElementById('db-serie-select').value;
+            const eventSelect = document.getElementById('db-event-select');
+            const klassSelect = document.getElementById('db-klass-select');
+
+            // Update event select based on serie
+            eventSelect.innerHTML = '<option value="all">Alla events</option>';
+            klassSelect.innerHTML = '<option value="all">Alla klasser</option>';
+
+            if (selectedSerie !== 'all') {
+                const serieEvents = [...new Set(results
+                    .filter(r => r.serie === selectedSerie)
+                    .map(r => r.deltavling))]
+                    .sort((a, b) => getEventNumber(a) - getEventNumber(b));
+
+                serieEvents.forEach(e => {
+                    const opt = document.createElement('option');
+                    opt.value = e;
+                    opt.textContent = e;
+                    eventSelect.appendChild(opt);
+                });
+
+                // Update class select
+                const selectedEvent = eventSelect.value;
+                const klasses = [...new Set(results
+                    .filter(r => r.serie === selectedSerie && (selectedEvent === 'all' || r.deltavling === selectedEvent))
+                    .map(r => r.klass))];
+
+                klasses.forEach(k => {
+                    const opt = document.createElement('option');
+                    opt.value = k;
+                    opt.textContent = k;
+                    klassSelect.appendChild(opt);
+                });
+            }
+
+            renderDatabase();
+        }
+
         function renderDatabase() {
             const tbody = document.getElementById('database-body');
             tbody.innerHTML = '';
+
+            const selectedSerie = document.getElementById('db-serie-select')?.value || 'all';
+            const selectedEvent = document.getElementById('db-event-select')?.value || 'all';
+            const selectedKlass = document.getElementById('db-klass-select')?.value || 'all';
 
             // Clear all sort indicators
             ['serie', 'klass', 'deltavling', 'fornamn', 'placering', 'tid'].forEach(field => {
@@ -726,11 +831,22 @@
                 if (indicator) indicator.textContent = dbSortDirection === 'asc' ? '↑' : '↓';
             }
 
-            // Filter results
+            // Filter results by dropdowns
             let filteredResults = results;
+            if (selectedSerie !== 'all') {
+                filteredResults = filteredResults.filter(r => r.serie === selectedSerie);
+            }
+            if (selectedEvent !== 'all') {
+                filteredResults = filteredResults.filter(r => r.deltavling === selectedEvent);
+            }
+            if (selectedKlass !== 'all') {
+                filteredResults = filteredResults.filter(r => r.klass === selectedKlass);
+            }
+
+            // Filter by search term
             if (dbSearchTerm) {
                 const term = dbSearchTerm.toLowerCase();
-                filteredResults = results.filter(r => {
+                filteredResults = filteredResults.filter(r => {
                     const fullName = `${r.fornamn} ${r.efternamn}`.toLowerCase();
                     return fullName.includes(term) ||
                            r.serie.toLowerCase().includes(term) ||
@@ -740,7 +856,12 @@
                 });
             }
 
-            // Sort results
+            // Sort results - default by position
+            if (!dbSortField) {
+                dbSortField = 'placering';
+                dbSortDirection = 'asc';
+            }
+
             if (dbSortField) {
                 filteredResults = [...filteredResults].sort((a, b) => {
                     let valA = a[dbSortField] || '';
@@ -748,8 +869,8 @@
 
                     // Special handling for numeric fields
                     if (dbSortField === 'placering') {
-                        valA = parseInt(valA) || 0;
-                        valB = parseInt(valB) || 0;
+                        valA = parseInt(valA) || 999;
+                        valB = parseInt(valB) || 999;
                     } else if (dbSortField === 'deltavling') {
                         // Sort by event number
                         valA = getEventNumber(valA.toString());
@@ -758,6 +879,10 @@
                         // Sort by full name
                         valA = `${a.fornamn} ${a.efternamn}`.toLowerCase();
                         valB = `${b.fornamn} ${b.efternamn}`.toLowerCase();
+                    } else if (dbSortField === 'tid') {
+                        // Sort by time
+                        valA = parseTimeToSeconds(valA.toString()) || 999999;
+                        valB = parseTimeToSeconds(valB.toString()) || 999999;
                     } else {
                         valA = valA.toString().toLowerCase();
                         valB = valB.toString().toLowerCase();
@@ -771,14 +896,36 @@
                 });
             }
 
+            // Calculate time differences per serie/event/class
+            const timeDiffs = {};
+            filteredResults.forEach(r => {
+                const key = `${r.serie}|||${r.deltavling}|||${r.klass}`;
+                if (!timeDiffs[key]) {
+                    timeDiffs[key] = { fastest: null, fastestTime: Infinity };
+                }
+                const timeSeconds = parseTimeToSeconds(r.tid);
+                if (timeSeconds && timeSeconds < timeDiffs[key].fastestTime) {
+                    timeDiffs[key].fastestTime = timeSeconds;
+                }
+            });
+
             // Update count
             document.getElementById('database-count').textContent = filteredResults.length;
 
             // Render rows
             filteredResults.forEach(r => {
                 const eventKey = `${r.serie}|||${r.deltavling}`;
+                const diffKey = `${r.serie}|||${r.deltavling}|||${r.klass}`;
                 const event = events[eventKey];
                 const points = event ? getPoints(r.placering, event.pointSystem) : 0;
+
+                // Calculate time difference
+                const timeSeconds = parseTimeToSeconds(r.tid);
+                let timeDiff = '-';
+                if (timeSeconds && timeDiffs[diffKey]) {
+                    const diff = timeSeconds - timeDiffs[diffKey].fastestTime;
+                    timeDiff = diff === 0 ? '-' : formatTimeDiff(diff);
+                }
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
@@ -789,10 +936,17 @@
                     <td style="font-size: 0.875rem; color: #6b7280;">${r.klubb}</td>
                     <td style="text-align: center; font-weight: 600;">${r.placering}</td>
                     <td style="text-align: center; font-family: monospace; font-size: 0.875rem;">${r.tid || '-'}</td>
+                    <td style="text-align: center; font-family: monospace; font-size: 0.875rem; color: #ef4444;">${timeDiff}</td>
                     <td style="text-align: center; font-weight: bold; color: #4f46e5;">${points}p</td>
                 `;
                 tbody.appendChild(tr);
             });
+
+            // Update sort indicator for default
+            if (dbSortField === 'placering') {
+                const indicator = document.getElementById('db-sort-placering');
+                if (indicator) indicator.textContent = dbSortDirection === 'asc' ? '↑' : '↓';
+            }
         }
 
         // Levenshtein distance for fuzzy matching
@@ -1237,7 +1391,53 @@
             e.target.value = '';
         }
 
+        // Show data.json content
+        function showDataJSON() {
+            const data = {
+                riders,
+                results,
+                events,
+                serieSettings,
+                invalidResults: Array.from(invalidResults)
+            };
+            const jsonStr = JSON.stringify(data, null, 2);
+            document.getElementById('json-content').value = jsonStr;
+            document.getElementById('json-modal').classList.add('show');
+        }
+
+        function copyJSON() {
+            const textarea = document.getElementById('json-content');
+            textarea.select();
+            document.execCommand('copy');
+            alert('JSON kopierad till urklipp! Klistra in i data.json filen.');
+        }
+
+        function closeDataJSON() {
+            document.getElementById('json-modal').classList.remove('show');
+        }
+
+        // Load data.json on startup
+        async function loadDataJSON() {
+            try {
+                const response = await fetch('data.json');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.results && data.results.length > 0) {
+                        riders = data.riders || {};
+                        results = data.results || [];
+                        events = data.events || {};
+                        serieSettings = data.serieSettings || {};
+                        invalidResults = new Set(data.invalidResults || []);
+                        updateUI();
+                    }
+                }
+            } catch (error) {
+                console.log('No data.json file found or error loading it');
+            }
+        }
+
         // Initialize
+        loadDataJSON();
         updateUI();
     </script>
 </body>
