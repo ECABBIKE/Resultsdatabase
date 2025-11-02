@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Kvalpoäng Kalkylator</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(to bottom right, #eff6ff, #e0e7ff); min-height: 100vh; padding: 1rem; }
+        .container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 0.5rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); padding: 1.5rem; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        h1 { font-size: 1.875rem; font-weight: bold; }
+        .public-link { padding: 0.5rem 1rem; background: #10b981; color: white; text-decoration: none; border-radius: 0.375rem; font-size: 0.875rem; }
+        .public-link:hover { background: #059669; }
+        .tabs { display: flex; gap: 0.5rem; border-bottom: 1px solid #e5e7eb; margin-bottom: 1.5rem; overflow-x: auto; }
+        .tab { padding: 0.5rem 1rem; cursor: pointer; white-space: nowrap; border-bottom: 2px solid transparent; color: #6b7280; }
+        .tab.active { color: #4f46e5; border-bottom-color: #4f46e5; }
+        .btn-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.5rem; margin-bottom: 1rem; }
+        .btn { padding: 0.5rem 1rem; border: none; border-radius: 0.375rem; cursor: pointer; font-size: 0.875rem; font-weight: 500; color: white; text-align: center; }
+        .btn-primary { background: #4f46e5; }
+        .btn-secondary { background: #6b7280; }
+        .btn-success { background: #10b981; }
+        .btn-danger { background: #ef4444; }
+        .btn-purple { background: #9333ea; }
+        .btn-info { background: #0ea5e9; }
+        .btn:hover { opacity: 0.9; }
+        input[type="file"] { display: none; }
+        select, input[type="number"], input[type="text"] { padding: 0.5rem 1rem; border: 1px solid #d1d5db; border-radius: 0.375rem; width: 100%; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+        th { background: #4f46e5; color: white; padding: 0.5rem; text-align: left; white-space: nowrap; }
+        th.event-col { text-align: center; font-size: 0.75rem; }
+        th.total-col { background: #3730a3; text-align: center; }
+        td { padding: 0.5rem; border-bottom: 1px solid #e5e7eb; }
+        tr:nth-child(even) { background: #f9fafb; }
+        .overflow-x { overflow-x: auto; }
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; padding: 1rem; z-index: 1000; }
+        .modal.show { display: flex; }
+        .modal-content { background: white; border-radius: 0.5rem; padding: 1.5rem; max-width: 56rem; width: 100%; max-height: 90vh; overflow-y: auto; }
+        .modal-header { font-size: 1.25rem; font-weight: bold; margin-bottom: 1rem; }
+        .info-box { background: #dbeafe; padding: 1.5rem; border-radius: 0.375rem; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; text-align: center; }
+        .stat-card { padding: 1rem; border-radius: 0.375rem; }
+        .stat-card.blue { background: #dbeafe; }
+        .stat-card.green { background: #d1fae5; }
+        .stat-card.purple { background: #e9d5ff; }
+        .stat-card .number { font-size: 1.5rem; font-weight: bold; }
+        .stat-card .label { font-size: 0.875rem; color: #6b7280; }
+        .badge { display: inline-block; padding: 0.25rem 0.5rem; background: #e0e7ff; border-radius: 0.25rem; font-size: 0.875rem; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .icon-btn { padding: 0.25rem 0.5rem; border: none; border-radius: 0.25rem; cursor: pointer; color: white; font-size: 0.75rem; margin-right: 0.25rem; }
+        .btn-edit { background: #3b82f6; }
+        .btn-delete { background: #ef4444; }
+        .btn-warn { background: #eab308; }
+        .hidden { display: none; }
+        .event-points { font-weight: bold; color: #4f46e5; }
+        .event-position { font-size: 0.75rem; color: #6b7280; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 0.25rem; font-size: 0.875rem; }
+        .rider-results-table { margin-top: 1.5rem; }
+        .rider-results-table h3 { margin-bottom: 0.75rem; font-size: 1.125rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 Admin - Kvalpoäng Kalkylator</h1>
+            <a href="index.html" class="public-link" target="_blank">📊 Visa offentlig sida</a>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('results')">📊 Poängställning</div>
+            <div class="tab" onclick="switchTab('database')">📋 Resultatdatabas</div>
+            <div class="tab" onclick="switchTab('overview')">📈 Översikt</div>
+            <div class="tab" onclick="switchTab('manage')">⚙️ Hantera</div>
+            <div class="tab" onclick="switchTab('riders')">👥 Deltagare (<span id="rider-count">0</span>)</div>
+        </div>
+
+        <!-- Results Tab -->
+        <div id="tab-results" class="tab-content">
+            <div class="btn-grid">
+                <label class="btn btn-primary">
+                    📤 Import CSV
+                    <input type="file" accept=".csv" onchange="handleCSVImport(event)">
+                </label>
+                <button class="btn btn-secondary" onclick="showSettings()">⚙️ Poängsystem</button>
+                <button class="btn btn-success" onclick="saveData()">💾 Spara</button>
+                <label class="btn btn-purple">
+                    📥 Ladda
+                    <input type="file" accept=".json" onchange="loadData(event)">
+                </label>
+            </div>
+
+            <div id="no-data" class="info-box">
+                <p>Importera CSV för att komma igång!</p>
+            </div>
+
+            <div id="has-data" class="hidden">
+                <div class="grid-2" style="margin-bottom: 1rem;">
+                    <select id="serie-select" onchange="updateFilters()">
+                        <option value="all">Alla serier</option>
+                    </select>
+                    <select id="klass-select" onchange="updateStandings()">
+                        <option value="all">Alla klasser</option>
+                    </select>
+                </div>
+                <div class="overflow-x">
+                    <table id="standings-table">
+                        <thead id="standings-head">
+                            <tr>
+                                <th>Plac</th>
+                                <th>Namn</th>
+                                <th id="klass-header" class="hidden">Klass</th>
+                                <th>Klubb</th>
+                                <th class="total-col">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="standings-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Database Tab -->
+        <div id="tab-database" class="tab-content hidden">
+            <div class="flex-between">
+                <p style="font-size: 0.875rem; color: #6b7280;">
+                    Visar <span id="database-count">0</span> resultat
+                </p>
+                <input type="text" id="database-search" placeholder="🔍 Sök..."
+                       oninput="filterDatabase()"
+                       style="width: 300px; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem;">
+            </div>
+            <div class="overflow-x">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="cursor: pointer;" onclick="sortDatabase('serie')">
+                                Serie <span id="db-sort-serie"></span>
+                            </th>
+                            <th style="cursor: pointer;" onclick="sortDatabase('klass')">
+                                Klass <span id="db-sort-klass"></span>
+                            </th>
+                            <th style="cursor: pointer;" onclick="sortDatabase('deltavling')">
+                                Event <span id="db-sort-deltavling"></span>
+                            </th>
+                            <th style="cursor: pointer;" onclick="sortDatabase('fornamn')">
+                                Namn <span id="db-sort-fornamn"></span>
+                            </th>
+                            <th>Klubb</th>
+                            <th style="cursor: pointer;" onclick="sortDatabase('placering')">
+                                Plac <span id="db-sort-placering"></span>
+                            </th>
+                            <th style="cursor: pointer;" onclick="sortDatabase('tid')">
+                                Tid <span id="db-sort-tid"></span>
+                            </th>
+                            <th>Poäng</th>
+                        </tr>
+                    </thead>
+                    <tbody id="database-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Overview Tab -->
+        <div id="tab-overview" class="tab-content hidden">
+            <div id="overview-content"></div>
+        </div>
+
+        <!-- Manage Tab -->
+        <div id="tab-manage" class="tab-content hidden">
+            <div class="flex-between">
+                <p style="font-size: 0.875rem; color: #6b7280;">
+                    Visar <span id="result-count">0</span> resultat
+                </p>
+            </div>
+            <div class="overflow-x">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Serie</th>
+                            <th>Klass</th>
+                            <th>Event</th>
+                            <th>Förnamn</th>
+                            <th>Efternamn</th>
+                            <th>Klubb</th>
+                            <th>Plac</th>
+                            <th>Åtgärd</th>
+                        </tr>
+                    </thead>
+                    <tbody id="manage-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Riders Tab -->
+        <div id="tab-riders" class="tab-content hidden">
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                <button class="btn btn-purple" onclick="showDuplicates()">Visa exakta dubbletter</button>
+                <button class="btn btn-secondary" onclick="showSimilarNames()">Hitta liknande namn</button>
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+                <input type="text" id="rider-search" placeholder="🔍 Sök efter namn eller klubb..."
+                       oninput="filterRiders()"
+                       style="width: 100%; padding: 0.75rem; font-size: 1rem; border: 2px solid #e5e7eb; border-radius: 0.375rem;">
+            </div>
+
+            <div class="overflow-x">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th style="cursor: pointer;" onclick="sortRiders('fornamn')" title="Klicka för att sortera">
+                                Förnamn <span id="sort-fornamn-indicator"></span>
+                            </th>
+                            <th style="cursor: pointer;" onclick="sortRiders('efternamn')" title="Klicka för att sortera">
+                                Efternamn <span id="sort-efternamn-indicator"></span>
+                            </th>
+                            <th>Klubb</th>
+                            <th>Resultat</th>
+                            <th>Åtgärd</th>
+                        </tr>
+                    </thead>
+                    <tbody id="riders-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Poängsystem per event</div>
+            <div id="settings-content"></div>
+            <button class="btn btn-primary" onclick="closeSettings()" style="margin-top: 1rem;">Stäng</button>
+        </div>
+    </div>
+
+    <!-- Duplicates Modal -->
+    <div id="duplicates-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Dubbletter funna</div>
+            <div id="duplicates-content"></div>
+            <button class="btn btn-secondary" onclick="closeDuplicates()" style="margin-top: 1rem;">Stäng</button>
+        </div>
+    </div>
+
+    <!-- Similar Names Modal -->
+    <div id="similar-names-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Liknande namn (möjliga felstavningar)</div>
+            <div id="similar-names-content"></div>
+            <button class="btn btn-secondary" onclick="closeSimilarNames()" style="margin-top: 1rem;">Stäng</button>
+        </div>
+    </div>
+
+    <!-- Rider Details Modal -->
+    <div id="rider-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Deltagardetaljer</div>
+            <div id="rider-details-content">
+                <div class="form-group">
+                    <label>UCI ID</label>
+                    <input type="text" id="rider-uci" readonly style="background: #f3f4f6;">
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Förnamn</label>
+                        <input type="text" id="rider-fornamn">
+                    </div>
+                    <div class="form-group">
+                        <label>Efternamn</label>
+                        <input type="text" id="rider-efternamn">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Klubb</label>
+                    <input type="text" id="rider-klubb">
+                </div>
+
+                <div class="rider-results-table">
+                    <h3>Deltävlingar</h3>
+                    <div class="overflow-x">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Serie</th>
+                                    <th>Klass</th>
+                                    <th>Deltävling</th>
+                                    <th>Placering</th>
+                                    <th>Poäng</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rider-results-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top: 1.5rem; display: flex; gap: 0.5rem;">
+                <button class="btn btn-success" onclick="saveRiderDetails()">💾 Spara ändringar</button>
+                <button class="btn btn-secondary" onclick="closeRiderDetails()">Stäng</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Point systems
+        const POINT_SYSTEMS = {
+            ENDURO: [500,450,425,400,380,360,340,320,300,280,260,240,220,200,190,180,170,160,150,140,135,130,125,120,115,110,105,100,95,90,85,80,75,70,65,60,55,50,45,40,35,30,25,20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1],
+            'DH Kval': [100,80,60,55,50,45,40,35,30,20,18,16,14,12,10,9,8,7,6,5,4,3,2,1],
+            'DH RACE': [420,370,365,345,330,315,300,285,270,260,242,224,206,188,180,171,162,153,144,135,131,127,123,119,115,110,105,100,95,90,85,80,75,70,65,60,55,50,45,40,35,30,25,20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1],
+            Others: [250,225,212,200,190,180,170,160,150,140,130,120,110,100,95,90,85,80,75,70,68,65,62,60,57,55,52,50,47,45,42,40,37,35,32,30,27,25,22,20,17,15,12,10,9,8,7,6,5,4,3,2,1]
+        };
+
+        // Global state
+        let riders = {};
+        let results = [];
+        let events = {};
+        let serieSettings = {};
+        let invalidResults = new Set();
+        let nextId = 1000;
+        let currentRiderId = null;
+        let riderSortField = 'fornamn';
+        let riderSortDirection = 'asc';
+        let riderSearchTerm = '';
+        let dbSortField = null;
+        let dbSortDirection = 'asc';
+        let dbSearchTerm = '';
+
+        // Extract event number for sorting
+        function getEventNumber(eventName) {
+            const match = eventName.match(/#?(\d+)/);
+            return match ? parseInt(match[1]) : 999;
+        }
+
+        // Tab switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+
+            event.target.classList.add('active');
+            document.getElementById('tab-' + tabName).classList.remove('hidden');
+
+            if (tabName === 'overview') renderOverview();
+            if (tabName === 'manage') renderManage();
+            if (tabName === 'riders') renderRiders();
+            if (tabName === 'database') renderDatabase();
+        }
+
+        // CSV Import
+        function handleCSVImport(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const lines = event.target.result.trim().split('\n');
+                if (lines.length < 2) return;
+
+                const headers = lines[0].split(/[,;]/).map(h => h.trim().toLowerCase());
+                let localNextId = nextId;
+
+                lines.slice(1).forEach(line => {
+                    if (!line.trim()) return;
+                    const values = line.split(/[,;]/).map(v => v.trim());
+
+                    const fornamn = values[headers.indexOf('förnamn')] || values[headers.indexOf('firstname')] || '';
+                    const efternamn = values[headers.indexOf('efternamn')] || values[headers.indexOf('lastname')] || '';
+                    const serie = values[headers.indexOf('serie')] || values[headers.indexOf('series')] || '';
+                    const klass = values[headers.indexOf('klass')] || values[headers.indexOf('class')] || '';
+                    const deltavling = values[headers.indexOf('deltävling')] || values[headers.indexOf('deltavling')] || '';
+                    const placering = parseInt(values[headers.indexOf('placering')] || values[headers.indexOf('position')] || '0');
+                    const klubb = values[headers.indexOf('klubb')] || values[headers.indexOf('förening')] || values[headers.indexOf('club')] || '';
+                    const pointSystem = values[headers.indexOf('poängsystem')] || values[headers.indexOf('poang')] || 'ENDURO';
+                    let uciId = values[headers.indexOf('uci-id')] || values[headers.indexOf('uci')] || '';
+                    const tid = values[headers.indexOf('tid')] || values[headers.indexOf('time')] || '';
+
+                    if (!fornamn || !efternamn || !placering || !serie || !klass || !deltavling) return;
+
+                    // Find or create rider
+                    let riderId = null;
+                    if (uciId && !uciId.startsWith('TEMP')) {
+                        const existing = Object.entries(riders).find(([id, r]) => r.uciId === uciId);
+                        if (existing) {
+                            riderId = existing[0];
+                        } else {
+                            riderId = uciId;
+                            riders[riderId] = { fornamn, efternamn, klubb, uciId };
+                        }
+                    } else {
+                        const existing = Object.entries(riders).find(([id, r]) =>
+                            r.fornamn.toLowerCase() === fornamn.toLowerCase() &&
+                            r.efternamn.toLowerCase() === efternamn.toLowerCase() &&
+                            r.klubb.toLowerCase() === klubb.toLowerCase()
+                        );
+                        if (existing) {
+                            riderId = existing[0];
+                        } else {
+                            riderId = `TEMP${localNextId++}`;
+                            riders[riderId] = { fornamn, efternamn, klubb, uciId: riderId };
+                        }
+                    }
+
+                    // Add event
+                    const eventKey = `${serie}|||${deltavling}`;
+                    if (!events[eventKey]) {
+                        events[eventKey] = { serie, deltavling, pointSystem, classes: [] };
+                    }
+                    if (!events[eventKey].classes.includes(klass)) {
+                        events[eventKey].classes.push(klass);
+                    }
+
+                    // Add result
+                    results.push({ riderId, fornamn, efternamn, klubb, serie, klass, deltavling, placering, tid });
+                });
+
+                nextId = localNextId;
+                updateUI();
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        }
+
+        // Get points
+        function getPoints(position, pointSystem) {
+            const points = POINT_SYSTEMS[pointSystem] || POINT_SYSTEMS.ENDURO;
+            return points[position - 1] || 1;
+        }
+
+        // Get standings
+        function getStandings() {
+            const selectedSerie = document.getElementById('serie-select').value;
+            const selectedKlass = document.getElementById('klass-select').value;
+
+            const validResults = results.filter((_, idx) => !invalidResults.has(idx));
+            let filtered = validResults;
+
+            if (selectedSerie !== 'all') filtered = filtered.filter(r => r.serie === selectedSerie);
+            if (selectedKlass !== 'all') filtered = filtered.filter(r => r.klass === selectedKlass);
+
+            const standings = {};
+            filtered.forEach(result => {
+                const eventKey = `${result.serie}|||${result.deltavling}`;
+                const event = events[eventKey];
+                if (!event) return;
+
+                const points = getPoints(result.placering, event.pointSystem);
+                if (!standings[result.riderId]) {
+                    standings[result.riderId] = {
+                        ...result,
+                        total: 0,
+                        allPoints: [],
+                        eventResults: {}
+                    };
+                }
+                standings[result.riderId].allPoints.push(points);
+                standings[result.riderId].eventResults[result.deltavling] = { placering: result.placering, points };
+            });
+
+            // Apply count best setting
+            Object.values(standings).forEach(rider => {
+                const countBest = serieSettings[rider.serie]?.countBest || 0;
+                if (countBest > 0 && rider.allPoints.length > countBest) {
+                    rider.total = rider.allPoints.sort((a, b) => b - a).slice(0, countBest).reduce((a, b) => a + b, 0);
+                } else {
+                    rider.total = rider.allPoints.reduce((a, b) => a + b, 0);
+                }
+            });
+
+            return Object.values(standings).sort((a, b) => b.total - a.total);
+        }
+
+        // Get sorted event list
+        function getSortedEvents(selectedSerie, selectedKlass) {
+            if (selectedSerie === 'all') return [];
+
+            const eventSet = new Set(
+                results
+                    .filter(r => r.serie === selectedSerie && (selectedKlass === 'all' || r.klass === selectedKlass))
+                    .map(r => r.deltavling)
+            );
+
+            return Array.from(eventSet).sort((a, b) => {
+                const numA = getEventNumber(a);
+                const numB = getEventNumber(b);
+                return numA - numB;
+            });
+        }
+
+        // Update filters
+        function updateFilters() {
+            const selectedSerie = document.getElementById('serie-select').value;
+            const klassSelect = document.getElementById('klass-select');
+
+            // Clear and rebuild class options
+            klassSelect.innerHTML = '<option value="all">Alla klasser</option>';
+
+            if (selectedSerie !== 'all') {
+                const klasses = [...new Set(results.filter(r => r.serie === selectedSerie).map(r => r.klass))];
+                klasses.forEach(k => {
+                    const opt = document.createElement('option');
+                    opt.value = k;
+                    opt.textContent = k;
+                    klassSelect.appendChild(opt);
+                });
+                klassSelect.disabled = false;
+            } else {
+                klassSelect.disabled = true;
+            }
+
+            updateStandings();
+        }
+
+        // Update standings display
+        function updateStandings() {
+            const standings = getStandings();
+            const tbody = document.getElementById('standings-body');
+            const thead = document.getElementById('standings-head');
+            const selectedKlass = document.getElementById('klass-select').value;
+            const selectedSerie = document.getElementById('serie-select').value;
+
+            const eventList = getSortedEvents(selectedSerie, selectedKlass);
+
+            // Update header
+            let headerHTML = `
+                <tr>
+                    <th>Plac</th>
+                    <th>Namn</th>
+                    ${selectedKlass === 'all' && selectedSerie !== 'all' ? '<th>Klass</th>' : ''}
+                    <th>Klubb</th>`;
+
+            eventList.forEach(e => {
+                headerHTML += `<th class="event-col">${e}</th>`;
+            });
+
+            headerHTML += `<th class="total-col">Total</th></tr>`;
+            thead.innerHTML = headerHTML;
+
+            // Update body
+            tbody.innerHTML = '';
+            standings.forEach((r, i) => {
+                const tr = document.createElement('tr');
+                let rowHTML = `
+                    <td style="font-weight: bold;">${i + 1}</td>
+                    <td>${r.fornamn} ${r.efternamn}</td>
+                    ${selectedKlass === 'all' && selectedSerie !== 'all' ? `<td><span class="badge">${r.klass}</span></td>` : ''}
+                    <td style="font-size: 0.875rem;">${r.klubb}</td>`;
+
+                eventList.forEach(e => {
+                    if (r.eventResults[e]) {
+                        rowHTML += `<td style="text-align: center;">
+                            <div class="event-points">${r.eventResults[e].points}p</div>
+                            <div class="event-position">(${r.eventResults[e].placering})</div>
+                        </td>`;
+                    } else {
+                        rowHTML += `<td style="text-align: center; color: #d1d5db;">-</td>`;
+                    }
+                });
+
+                rowHTML += `<td style="font-weight: bold; color: #4f46e5; background: #eff6ff; text-align: center;">${r.total}</td>`;
+                tr.innerHTML = rowHTML;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Update UI
+        function updateUI() {
+            const hasData = results.length > 0;
+            document.getElementById('no-data').style.display = hasData ? 'none' : 'block';
+            document.getElementById('has-data').style.display = hasData ? 'block' : 'none';
+            document.getElementById('rider-count').textContent = Object.keys(riders).length;
+            document.getElementById('result-count').textContent = results.length;
+            document.getElementById('database-count').textContent = results.length;
+
+            if (hasData) {
+                // Update serie select
+                const serieSelect = document.getElementById('serie-select');
+                serieSelect.innerHTML = '<option value="all">Alla serier</option>';
+                const series = [...new Set(results.map(r => r.serie))];
+                series.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s;
+                    opt.textContent = s;
+                    serieSelect.appendChild(opt);
+                });
+
+                updateStandings();
+            }
+        }
+
+        // Render overview
+        function renderOverview() {
+            const content = document.getElementById('overview-content');
+            const series = [...new Set(results.map(r => r.serie))];
+
+            content.innerHTML = '';
+
+            series.forEach(serie => {
+                const serieEvents = Object.values(events).filter(e => e.serie === serie);
+                const serieResults = results.filter(r => r.serie === serie);
+                const uniqueRiders = new Set(serieResults.map(r => r.riderId)).size;
+                const uniqueClasses = new Set(serieResults.map(r => r.klass)).size;
+
+                const div = document.createElement('div');
+                div.style.marginBottom = '1.5rem';
+                div.style.padding = '1rem';
+                div.style.border = '1px solid #e5e7eb';
+                div.style.borderRadius = '0.375rem';
+
+                div.innerHTML = `
+                    <div class="flex-between">
+                        <h3 style="font-size: 1.25rem; font-weight: bold;">${serie}</h3>
+                        <div>
+                            <label style="display: block; font-size: 0.875rem; margin-bottom: 0.25rem;">Räkna bästa:</label>
+                            <input type="number" min="0" value="${serieSettings[serie]?.countBest || 0}"
+                                   onchange="updateCountBest('${serie}', this.value)"
+                                   style="width: 6rem;" placeholder="0=alla">
+                        </div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="stat-card blue">
+                            <div class="number">${serieEvents.length}</div>
+                            <div class="label">Events</div>
+                        </div>
+                        <div class="stat-card green">
+                            <div class="number">${uniqueRiders}</div>
+                            <div class="label">Deltagare</div>
+                        </div>
+                        <div class="stat-card purple">
+                            <div class="number">${uniqueClasses}</div>
+                            <div class="label">Klasser</div>
+                        </div>
+                    </div>
+                `;
+
+                content.appendChild(div);
+            });
+        }
+
+        function updateCountBest(serie, value) {
+            if (!serieSettings[serie]) serieSettings[serie] = {};
+            serieSettings[serie].countBest = parseInt(value) || 0;
+            updateStandings();
+        }
+
+        // Render manage
+        function renderManage() {
+            const tbody = document.getElementById('manage-body');
+            tbody.innerHTML = '';
+
+            results.forEach((r, i) => {
+                const isInvalid = invalidResults.has(i);
+                const tr = document.createElement('tr');
+                if (isInvalid) tr.style.opacity = '0.5';
+
+                tr.innerHTML = `
+                    <td>${r.serie}</td>
+                    <td>${r.klass}</td>
+                    <td>${r.deltavling}</td>
+                    <td>${r.fornamn}</td>
+                    <td>${r.efternamn}</td>
+                    <td>${r.klubb}</td>
+                    <td style="text-align: center; font-weight: 600;">${r.placering}</td>
+                    <td>
+                        <button class="icon-btn ${isInvalid ? 'btn-success' : 'btn-warn'}"
+                                onclick="toggleInvalid(${i})" title="${isInvalid ? 'Markera giltig' : 'Markera ogiltig'}">
+                            ⚠
+                        </button>
+                        <button class="icon-btn btn-delete" onclick="deleteResult(${i})" title="Radera">
+                            🗑
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function toggleInvalid(index) {
+            if (invalidResults.has(index)) {
+                invalidResults.delete(index);
+            } else {
+                invalidResults.add(index);
+            }
+            renderManage();
+            updateStandings();
+        }
+
+        function deleteResult(index) {
+            if (confirm('Är du säker på att du vill radera detta resultat?')) {
+                results.splice(index, 1);
+                renderManage();
+                updateUI();
+            }
+        }
+
+        // Database tab functions
+        function sortDatabase(field) {
+            if (dbSortField === field) {
+                dbSortDirection = dbSortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                dbSortField = field;
+                dbSortDirection = 'asc';
+            }
+            renderDatabase();
+        }
+
+        function filterDatabase() {
+            dbSearchTerm = document.getElementById('database-search').value;
+            renderDatabase();
+        }
+
+        function renderDatabase() {
+            const tbody = document.getElementById('database-body');
+            tbody.innerHTML = '';
+
+            // Clear all sort indicators
+            ['serie', 'klass', 'deltavling', 'fornamn', 'placering', 'tid'].forEach(field => {
+                const indicator = document.getElementById(`db-sort-${field}`);
+                if (indicator) indicator.textContent = '';
+            });
+
+            // Set current sort indicator
+            if (dbSortField) {
+                const indicator = document.getElementById(`db-sort-${dbSortField}`);
+                if (indicator) indicator.textContent = dbSortDirection === 'asc' ? '↑' : '↓';
+            }
+
+            // Filter results
+            let filteredResults = results;
+            if (dbSearchTerm) {
+                const term = dbSearchTerm.toLowerCase();
+                filteredResults = results.filter(r => {
+                    const fullName = `${r.fornamn} ${r.efternamn}`.toLowerCase();
+                    return fullName.includes(term) ||
+                           r.serie.toLowerCase().includes(term) ||
+                           r.klass.toLowerCase().includes(term) ||
+                           r.deltavling.toLowerCase().includes(term) ||
+                           r.klubb.toLowerCase().includes(term);
+                });
+            }
+
+            // Sort results
+            if (dbSortField) {
+                filteredResults = [...filteredResults].sort((a, b) => {
+                    let valA = a[dbSortField] || '';
+                    let valB = b[dbSortField] || '';
+
+                    // Special handling for numeric fields
+                    if (dbSortField === 'placering') {
+                        valA = parseInt(valA) || 0;
+                        valB = parseInt(valB) || 0;
+                    } else if (dbSortField === 'deltavling') {
+                        // Sort by event number
+                        valA = getEventNumber(valA.toString());
+                        valB = getEventNumber(valB.toString());
+                    } else if (dbSortField === 'fornamn') {
+                        // Sort by full name
+                        valA = `${a.fornamn} ${a.efternamn}`.toLowerCase();
+                        valB = `${b.fornamn} ${b.efternamn}`.toLowerCase();
+                    } else {
+                        valA = valA.toString().toLowerCase();
+                        valB = valB.toString().toLowerCase();
+                    }
+
+                    if (dbSortDirection === 'asc') {
+                        return valA > valB ? 1 : -1;
+                    } else {
+                        return valA < valB ? 1 : -1;
+                    }
+                });
+            }
+
+            // Update count
+            document.getElementById('database-count').textContent = filteredResults.length;
+
+            // Render rows
+            filteredResults.forEach(r => {
+                const eventKey = `${r.serie}|||${r.deltavling}`;
+                const event = events[eventKey];
+                const points = event ? getPoints(r.placering, event.pointSystem) : 0;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${r.serie}</td>
+                    <td><span class="badge">${r.klass}</span></td>
+                    <td>${r.deltavling}</td>
+                    <td>${r.fornamn} ${r.efternamn}</td>
+                    <td style="font-size: 0.875rem; color: #6b7280;">${r.klubb}</td>
+                    <td style="text-align: center; font-weight: 600;">${r.placering}</td>
+                    <td style="text-align: center; font-family: monospace; font-size: 0.875rem;">${r.tid || '-'}</td>
+                    <td style="text-align: center; font-weight: bold; color: #4f46e5;">${points}p</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Levenshtein distance for fuzzy matching
+        function levenshteinDistance(a, b) {
+            const matrix = [];
+            for (let i = 0; i <= b.length; i++) {
+                matrix[i] = [i];
+            }
+            for (let j = 0; j <= a.length; j++) {
+                matrix[0][j] = j;
+            }
+            for (let i = 1; i <= b.length; i++) {
+                for (let j = 1; j <= a.length; j++) {
+                    if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i - 1][j - 1] + 1,
+                            matrix[i][j - 1] + 1,
+                            matrix[i - 1][j] + 1
+                        );
+                    }
+                }
+            }
+            return matrix[b.length][a.length];
+        }
+
+        // Filter riders based on search
+        function filterRiders() {
+            riderSearchTerm = document.getElementById('rider-search').value;
+            renderRiders();
+        }
+
+        // Sort riders
+        function sortRiders(field) {
+            if (riderSortField === field) {
+                riderSortDirection = riderSortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                riderSortField = field;
+                riderSortDirection = 'asc';
+            }
+            renderRiders();
+        }
+
+        // Get filtered and sorted riders
+        function getFilteredSortedRiders() {
+            let ridersList = Object.entries(riders);
+
+            // Filter
+            if (riderSearchTerm) {
+                const term = riderSearchTerm.toLowerCase();
+                ridersList = ridersList.filter(([id, r]) => {
+                    const fullName = `${r.fornamn} ${r.efternamn}`.toLowerCase();
+                    const klubb = r.klubb.toLowerCase();
+                    return fullName.includes(term) || klubb.includes(term) || id.toLowerCase().includes(term);
+                });
+            }
+
+            // Sort
+            ridersList.sort(([idA, rA], [idB, rB]) => {
+                let valA = rA[riderSortField] || '';
+                let valB = rB[riderSortField] || '';
+
+                valA = valA.toString().toLowerCase();
+                valB = valB.toString().toLowerCase();
+
+                if (riderSortDirection === 'asc') {
+                    return valA > valB ? 1 : -1;
+                } else {
+                    return valA < valB ? 1 : -1;
+                }
+            });
+
+            return ridersList;
+        }
+
+        // Render riders
+        function renderRiders() {
+            const tbody = document.getElementById('riders-body');
+            tbody.innerHTML = '';
+
+            // Update sort indicators
+            document.getElementById('sort-fornamn-indicator').textContent =
+                riderSortField === 'fornamn' ? (riderSortDirection === 'asc' ? '↑' : '↓') : '';
+            document.getElementById('sort-efternamn-indicator').textContent =
+                riderSortField === 'efternamn' ? (riderSortDirection === 'asc' ? '↑' : '↓') : '';
+
+            const ridersList = getFilteredSortedRiders();
+
+            ridersList.forEach(([id, r]) => {
+                const resultCount = results.filter(res => res.riderId === id).length;
+                const tr = document.createElement('tr');
+
+                tr.innerHTML = `
+                    <td style="font-family: monospace; font-size: 0.75rem;">
+                        ${id}${id.startsWith('TEMP') ? ' <span style="color: #eab308;">(Temp)</span>' : ''}
+                    </td>
+                    <td>${r.fornamn}</td>
+                    <td>${r.efternamn}</td>
+                    <td>${r.klubb}</td>
+                    <td>${resultCount}</td>
+                    <td>
+                        <button class="icon-btn btn-info" onclick="showRiderDetails('${id}')" title="Visa detaljer">
+                            👁️ Detaljer
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Rider details modal
+        function showRiderDetails(riderId) {
+            currentRiderId = riderId;
+            const rider = riders[riderId];
+
+            document.getElementById('rider-uci').value = rider.uciId;
+            document.getElementById('rider-fornamn').value = rider.fornamn;
+            document.getElementById('rider-efternamn').value = rider.efternamn;
+            document.getElementById('rider-klubb').value = rider.klubb;
+
+            // Get all results for this rider
+            const riderResults = results.filter(r => r.riderId === riderId);
+            const tbody = document.getElementById('rider-results-body');
+            tbody.innerHTML = '';
+
+            riderResults.forEach(r => {
+                const eventKey = `${r.serie}|||${r.deltavling}`;
+                const event = events[eventKey];
+                const points = event ? getPoints(r.placering, event.pointSystem) : 0;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${r.serie}</td>
+                    <td>${r.klass}</td>
+                    <td>${r.deltavling}</td>
+                    <td style="text-align: center; font-weight: 600;">${r.placering}</td>
+                    <td style="text-align: center; color: #4f46e5; font-weight: bold;">${points}p</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('rider-modal').classList.add('show');
+        }
+
+        function saveRiderDetails() {
+            if (!currentRiderId) return;
+
+            const fornamn = document.getElementById('rider-fornamn').value.trim();
+            const efternamn = document.getElementById('rider-efternamn').value.trim();
+            const klubb = document.getElementById('rider-klubb').value.trim();
+
+            if (!fornamn || !efternamn) {
+                alert('Förnamn och efternamn måste fyllas i!');
+                return;
+            }
+
+            // Update rider
+            riders[currentRiderId].fornamn = fornamn;
+            riders[currentRiderId].efternamn = efternamn;
+            riders[currentRiderId].klubb = klubb;
+
+            // Update all results for this rider
+            results = results.map(r => {
+                if (r.riderId === currentRiderId) {
+                    return { ...r, fornamn, efternamn, klubb };
+                }
+                return r;
+            });
+
+            closeRiderDetails();
+            renderRiders();
+            updateStandings();
+        }
+
+        function closeRiderDetails() {
+            document.getElementById('rider-modal').classList.remove('show');
+            currentRiderId = null;
+        }
+
+        // Settings modal
+        function showSettings() {
+            const content = document.getElementById('settings-content');
+            content.innerHTML = '';
+
+            Object.entries(events).forEach(([key, event]) => {
+                const div = document.createElement('div');
+                div.style.marginBottom = '1rem';
+                div.style.padding = '1rem';
+                div.style.background = '#f9fafb';
+                div.style.borderRadius = '0.375rem';
+                div.style.display = 'flex';
+                div.style.justifyContent = 'space-between';
+                div.style.alignItems = 'center';
+
+                div.innerHTML = `
+                    <div>
+                        <div style="font-weight: 600;">${event.serie} - ${event.deltavling}</div>
+                        <div style="font-size: 0.875rem; color: #6b7280;">${event.classes.join(', ')}</div>
+                    </div>
+                    <select onchange="updateEventSystem('${key}', this.value)" style="width: 150px;">
+                        <option value="ENDURO" ${event.pointSystem === 'ENDURO' ? 'selected' : ''}>ENDURO</option>
+                        <option value="DH Kval" ${event.pointSystem === 'DH Kval' ? 'selected' : ''}>DH Kval</option>
+                        <option value="DH RACE" ${event.pointSystem === 'DH RACE' ? 'selected' : ''}>DH RACE</option>
+                        <option value="Others" ${event.pointSystem === 'Others' ? 'selected' : ''}>Others</option>
+                    </select>
+                `;
+
+                content.appendChild(div);
+            });
+
+            document.getElementById('settings-modal').classList.add('show');
+        }
+
+        function updateEventSystem(key, system) {
+            events[key].pointSystem = system;
+            updateStandings();
+        }
+
+        function closeSettings() {
+            document.getElementById('settings-modal').classList.remove('show');
+        }
+
+        // Duplicates
+        function showDuplicates() {
+            const groups = findDuplicates();
+            const content = document.getElementById('duplicates-content');
+
+            if (groups.length === 0) {
+                content.innerHTML = '<p style="color: #10b981;">Inga dubbletter! ✓</p>';
+            } else {
+                content.innerHTML = '';
+                groups.forEach((group, idx) => {
+                    const div = document.createElement('div');
+                    div.style.marginBottom = '1rem';
+                    div.style.padding = '1rem';
+                    div.style.background = '#fef3c7';
+                    div.style.border = '1px solid #fbbf24';
+                    div.style.borderRadius = '0.375rem';
+
+                    div.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <h4 style="font-weight: 600;">Grupp ${idx + 1} (${group.length} st)</h4>
+                            <button class="btn btn-primary" onclick="mergeGroup(${idx})">Slå ihop</button>
+                        </div>
+                        ${group.map(({id, rider}) => `
+                            <div style="font-size: 0.875rem; margin-left: 1rem;">
+                                • ${rider.fornamn} ${rider.efternamn} - ${rider.klubb} (${id})
+                            </div>
+                        `).join('')}
+                    `;
+
+                    content.appendChild(div);
+                });
+            }
+
+            window.duplicateGroups = groups;
+            document.getElementById('duplicates-modal').classList.add('show');
+        }
+
+        function findDuplicates() {
+            const groups = [];
+            const processed = new Set();
+            const riderList = Object.entries(riders);
+
+            riderList.forEach(([id1, r1]) => {
+                if (processed.has(id1)) return;
+                const group = [{ id: id1, rider: r1 }];
+
+                riderList.forEach(([id2, r2]) => {
+                    if (id1 === id2 || processed.has(id2)) return;
+                    if (r1.fornamn.toLowerCase() === r2.fornamn.toLowerCase() &&
+                        r1.efternamn.toLowerCase() === r2.efternamn.toLowerCase()) {
+                        group.push({ id: id2, rider: r2 });
+                    }
+                });
+
+                if (group.length > 1) {
+                    group.forEach(item => processed.add(item.id));
+                    groups.push(group);
+                }
+            });
+            return groups;
+        }
+
+        function mergeGroup(groupIndex) {
+            const group = window.duplicateGroups[groupIndex];
+            const keepId = group.find(item => !item.id.startsWith('TEMP'))?.id || group[0].id;
+            const removeIds = group.filter(item => item.id !== keepId).map(item => item.id);
+
+            removeIds.forEach(id => delete riders[id]);
+            results = results.map(r =>
+                removeIds.includes(r.riderId) ? { ...r, riderId: keepId } : r
+            );
+
+            showDuplicates(); // Refresh
+            renderRiders();
+        }
+
+        function closeDuplicates() {
+            document.getElementById('duplicates-modal').classList.remove('show');
+        }
+
+        // Similar names (fuzzy matching)
+        function showSimilarNames() {
+            const groups = findSimilarNames();
+            const content = document.getElementById('similar-names-content');
+
+            if (groups.length === 0) {
+                content.innerHTML = '<p style="color: #10b981;">Inga liknande namn hittades! ✓</p>';
+            } else {
+                content.innerHTML = '<p style="margin-bottom: 1rem; color: #6b7280; font-size: 0.875rem;">Dessa namn liknar varandra och kan vara felstavningar. Kontrollera och slå ihop vid behov.</p>';
+                groups.forEach((group, idx) => {
+                    const div = document.createElement('div');
+                    div.style.marginBottom = '1rem';
+                    div.style.padding = '1rem';
+                    div.style.background = '#fef3c7';
+                    div.style.border = '1px solid #fbbf24';
+                    div.style.borderRadius = '0.375rem';
+
+                    div.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <h4 style="font-weight: 600;">Grupp ${idx + 1} (${group.length} st) - Likhet: ${group[0].similarity}%</h4>
+                            <button class="btn btn-primary" onclick="mergeSimilarGroup(${idx})">Slå ihop</button>
+                        </div>
+                        ${group.map(({id, rider}) => `
+                            <div style="font-size: 0.875rem; margin-left: 1rem;">
+                                • ${rider.fornamn} ${rider.efternamn} - ${rider.klubb} (${id})
+                            </div>
+                        `).join('')}
+                    `;
+
+                    content.appendChild(div);
+                });
+            }
+
+            window.similarNameGroups = groups;
+            document.getElementById('similar-names-modal').classList.add('show');
+        }
+
+        function findSimilarNames() {
+            const groups = [];
+            const processed = new Set();
+            const riderList = Object.entries(riders);
+            const threshold = 3; // Max Levenshtein distance
+
+            riderList.forEach(([id1, r1]) => {
+                if (processed.has(id1)) return;
+
+                const group = [{ id: id1, rider: r1 }];
+                let maxDistance = 0;
+
+                riderList.forEach(([id2, r2]) => {
+                    if (id1 === id2 || processed.has(id2)) return;
+
+                    // Check both first and last name
+                    const fornamnDist = levenshteinDistance(
+                        r1.fornamn.toLowerCase(),
+                        r2.fornamn.toLowerCase()
+                    );
+                    const efternamnDist = levenshteinDistance(
+                        r1.efternamn.toLowerCase(),
+                        r2.efternamn.toLowerCase()
+                    );
+
+                    // Similar if either name is close and the other matches exactly, or both are close
+                    if ((fornamnDist <= threshold && r1.efternamn.toLowerCase() === r2.efternamn.toLowerCase()) ||
+                        (efternamnDist <= threshold && r1.fornamn.toLowerCase() === r2.fornamn.toLowerCase()) ||
+                        (fornamnDist <= 2 && efternamnDist <= 2)) {
+                        group.push({ id: id2, rider: r2 });
+                        maxDistance = Math.max(maxDistance, fornamnDist + efternamnDist);
+                    }
+                });
+
+                if (group.length > 1) {
+                    // Calculate similarity percentage
+                    const avgNameLength = (r1.fornamn.length + r1.efternamn.length) / 2;
+                    const similarity = Math.round(100 - (maxDistance / avgNameLength) * 100);
+
+                    group.forEach(item => {
+                        item.similarity = similarity;
+                        processed.add(item.id);
+                    });
+                    groups.push(group);
+                }
+            });
+
+            return groups.sort((a, b) => b[0].similarity - a[0].similarity);
+        }
+
+        function mergeSimilarGroup(groupIndex) {
+            const group = window.similarNameGroups[groupIndex];
+            const keepId = group.find(item => !item.id.startsWith('TEMP'))?.id || group[0].id;
+            const removeIds = group.filter(item => item.id !== keepId).map(item => item.id);
+
+            removeIds.forEach(id => delete riders[id]);
+            results = results.map(r =>
+                removeIds.includes(r.riderId) ? { ...r, riderId: keepId } : r
+            );
+
+            showSimilarNames(); // Refresh
+            renderRiders();
+        }
+
+        function closeSimilarNames() {
+            document.getElementById('similar-names-modal').classList.remove('show');
+        }
+
+        // Save/Load
+        function saveData() {
+            const data = {
+                riders,
+                results,
+                events,
+                serieSettings,
+                invalidResults: Array.from(invalidResults)
+            };
+            const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `kvalpoang_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function loadData(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const data = JSON.parse(event.target.result);
+                riders = data.riders || {};
+                results = data.results || [];
+                events = data.events || {};
+                serieSettings = data.serieSettings || {};
+                invalidResults = new Set(data.invalidResults || []);
+                updateUI();
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        }
+
+        // Initialize
+        updateUI();
+    </script>
+</body>
+</html>
