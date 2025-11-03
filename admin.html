@@ -71,6 +71,8 @@
         <div class="tabs">
             <div class="tab active" onclick="switchTab('results')">📊 Poängställning</div>
             <div class="tab" onclick="switchTab('database')">📋 Resultatdatabas</div>
+            <div class="tab" onclick="switchTab('license')">📜 Licensregister (<span id="license-count">0</span>)</div>
+            <div class="tab" onclick="switchTab('startlist')">🚴 Startlistor</div>
             <div class="tab" onclick="switchTab('files')">📁 Uppladdade filer (<span id="file-count">0</span>)</div>
             <div class="tab" onclick="switchTab('overview')">📈 Översikt</div>
             <div class="tab" onclick="switchTab('manage')">⚙️ Hantera</div>
@@ -171,6 +173,104 @@
                         </tr>
                     </thead>
                     <tbody id="database-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- License Register Tab -->
+        <div id="tab-license" class="tab-content hidden">
+            <div class="btn-grid" style="margin-bottom: 1rem;">
+                <label class="btn btn-primary">
+                    📤 Importera Licensregister
+                    <input type="file" accept=".csv" onchange="handleLicenseImport(event)">
+                </label>
+                <button class="btn btn-success" onclick="saveLicenseRegister()">💾 Spara Register</button>
+                <label class="btn btn-purple">
+                    📥 Ladda Register
+                    <input type="file" accept=".json" onchange="loadLicenseRegister(event)">
+                </label>
+            </div>
+
+            <div class="flex-between">
+                <p style="font-size: 0.875rem; color: #6b7280;">
+                    <span id="license-count-text">0</span> licensierade cyklister
+                </p>
+                <input type="text" id="license-search" placeholder="🔍 Sök licens..."
+                       oninput="filterLicenses()"
+                       style="width: 300px; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem;">
+            </div>
+
+            <div class="info-box" style="margin: 1rem 0; background: #dbeafe;">
+                <p style="font-size: 0.875rem;"><strong>CSV-format för licensregister:</strong></p>
+                <p style="font-size: 0.875rem; margin-top: 0.5rem;">
+                    Kolumner: <code>uci-id, förnamn, efternamn, klubb, licensklass, giltigt_från, giltigt_till</code>
+                </p>
+                <p style="font-size: 0.875rem; margin-top: 0.25rem;">
+                    Exempel: <code>10012345, Anna, Andersson, CK Centrum, Elite, 2024-01-01, 2024-12-31</code>
+                </p>
+            </div>
+
+            <div class="overflow-x">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>UCI-ID</th>
+                            <th>Namn</th>
+                            <th>Klubb</th>
+                            <th>Licensklass</th>
+                            <th>Giltigt från</th>
+                            <th>Giltigt till</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="license-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Startlist Tab -->
+        <div id="tab-startlist" class="tab-content hidden">
+            <div class="btn-grid" style="margin-bottom: 1rem;">
+                <label class="btn btn-primary">
+                    📤 Importera Startlista
+                    <input type="file" accept=".csv" onchange="handleStartlistImport(event)">
+                </label>
+                <button class="btn btn-info" onclick="exportStartlistReport()">📋 Exportera Rapport</button>
+                <button class="btn btn-danger" onclick="clearStartlist()">🗑 Rensa Startlista</button>
+            </div>
+
+            <div class="info-box" style="margin: 1rem 0; background: #dbeafe;">
+                <p style="font-size: 0.875rem;"><strong>CSV-format för startlista:</strong></p>
+                <p style="font-size: 0.875rem; margin-top: 0.5rem;">
+                    Kolumner: <code>uci-id, förnamn, efternamn, klubb, serie, klass, startnummer, deltävling</code>
+                </p>
+                <p style="font-size: 0.875rem; margin-top: 0.25rem;">
+                    Exempel: <code>10012345, Anna, Andersson, CK Centrum, ENDURO, Elite Dam, 101, Deltävling #1</code>
+                </p>
+            </div>
+
+            <div class="flex-between">
+                <p style="font-size: 0.875rem; color: #6b7280;">
+                    <span id="startlist-count">0</span> deltagare |
+                    <span style="color: #10b981;">✓ <span id="startlist-valid">0</span> med licens</span> |
+                    <span style="color: #ef4444;">✗ <span id="startlist-invalid">0</span> utan licens</span>
+                </p>
+            </div>
+
+            <div class="overflow-x">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Start#</th>
+                            <th>Namn</th>
+                            <th>Klubb</th>
+                            <th>Serie</th>
+                            <th>Klass</th>
+                            <th>Event</th>
+                            <th>Licens Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="startlist-body"></tbody>
                 </table>
             </div>
         </div>
@@ -407,6 +507,9 @@
         let uploadedFiles = [];
         let pendingCSVFile = null;
         let yearFilter = null;
+        let licenses = {}; // UCI-ID -> license info
+        let startlist = []; // Array of startlist entries
+        let licenseSearchTerm = '';
 
         // Extract event number for sorting
         function getEventNumber(eventName) {
@@ -427,6 +530,8 @@
             if (tabName === 'riders') renderRiders();
             if (tabName === 'database') renderDatabase();
             if (tabName === 'files') renderFiles();
+            if (tabName === 'license') renderLicenses();
+            if (tabName === 'startlist') renderStartlist();
         }
 
         // CSV Import - Step 1: Ask for year
@@ -699,6 +804,8 @@
             document.getElementById('database-count').textContent = results.length;
             document.getElementById('file-count').textContent = uploadedFiles.length;
             document.getElementById('file-count-text').textContent = uploadedFiles.length;
+            document.getElementById('license-count').textContent = Object.keys(licenses).length;
+            document.getElementById('license-count-text').textContent = Object.keys(licenses).length;
 
             if (hasData) {
                 // Update serie select for standings
@@ -954,6 +1061,274 @@
                     delete riders[id];
                 }
             });
+        }
+
+        // License management functions
+        function handleLicenseImport(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const lines = event.target.result.trim().split('\n');
+                if (lines.length < 2) return;
+
+                const headers = lines[0].split(/[,;]/).map(h => h.trim().toLowerCase());
+                let importCount = 0;
+
+                lines.slice(1).forEach(line => {
+                    if (!line.trim()) return;
+                    const values = line.split(/[,;]/).map(v => v.trim());
+
+                    const uciId = values[headers.indexOf('uci-id')] || values[headers.indexOf('uci')] || '';
+                    const fornamn = values[headers.indexOf('förnamn')] || values[headers.indexOf('fornamn')] || values[headers.indexOf('firstname')] || '';
+                    const efternamn = values[headers.indexOf('efternamn')] || values[headers.indexOf('efternamn')] || values[headers.indexOf('lastname')] || '';
+                    const klubb = values[headers.indexOf('klubb')] || values[headers.indexOf('club')] || '';
+                    const licensklass = values[headers.indexOf('licensklass')] || values[headers.indexOf('license_class')] || '';
+                    const giltigt_fran = values[headers.indexOf('giltigt_från')] || values[headers.indexOf('giltigt_fran')] || values[headers.indexOf('valid_from')] || '';
+                    const giltigt_till = values[headers.indexOf('giltigt_till')] || values[headers.indexOf('valid_until')] || '';
+
+                    if (!uciId || !fornamn || !efternamn) return;
+
+                    licenses[uciId] = {
+                        uciId,
+                        fornamn,
+                        efternamn,
+                        klubb,
+                        licensklass,
+                        giltigt_fran,
+                        giltigt_till
+                    };
+                    importCount++;
+                });
+
+                alert(`Importerade ${importCount} licenser!`);
+                updateUI();
+                renderLicenses();
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        }
+
+        function checkLicenseStatus(giltigt_till) {
+            if (!giltigt_till) return { valid: false, text: 'Ingen giltighetstid', color: '#6b7280' };
+
+            const expiry = new Date(giltigt_till);
+            const today = new Date();
+            const daysUntilExpiry = Math.floor((expiry - today) / (1000 * 60 * 60 * 24));
+
+            if (daysUntilExpiry < 0) {
+                return { valid: false, text: `Utgången (${Math.abs(daysUntilExpiry)} dagar sedan)`, color: '#ef4444' };
+            } else if (daysUntilExpiry < 30) {
+                return { valid: true, text: `Går ut om ${daysUntilExpiry} dagar`, color: '#f59e0b' };
+            } else {
+                return { valid: true, text: `Giltig (${daysUntilExpiry} dagar kvar)`, color: '#10b981' };
+            }
+        }
+
+        function filterLicenses() {
+            licenseSearchTerm = document.getElementById('license-search').value;
+            renderLicenses();
+        }
+
+        function renderLicenses() {
+            const tbody = document.getElementById('license-body');
+            tbody.innerHTML = '';
+
+            let licenseList = Object.values(licenses);
+
+            // Filter
+            if (licenseSearchTerm) {
+                const term = licenseSearchTerm.toLowerCase();
+                licenseList = licenseList.filter(lic => {
+                    const fullName = `${lic.fornamn} ${lic.efternamn}`.toLowerCase();
+                    return fullName.includes(term) ||
+                           lic.uciId.toLowerCase().includes(term) ||
+                           lic.klubb.toLowerCase().includes(term) ||
+                           lic.licensklass.toLowerCase().includes(term);
+                });
+            }
+
+            licenseList.forEach(lic => {
+                const status = checkLicenseStatus(lic.giltigt_till);
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-family: monospace; font-size: 0.875rem;">${lic.uciId}</td>
+                    <td>${lic.fornamn} ${lic.efternamn}</td>
+                    <td style="font-size: 0.875rem;">${lic.klubb}</td>
+                    <td><span class="badge">${lic.licensklass}</span></td>
+                    <td style="font-size: 0.875rem;">${lic.giltigt_fran}</td>
+                    <td style="font-size: 0.875rem;">${lic.giltigt_till}</td>
+                    <td style="color: ${status.color}; font-weight: 600; font-size: 0.875rem;">
+                        ${status.valid ? '✓' : '✗'} ${status.text}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function saveLicenseRegister() {
+            const data = { licenses };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'licensregister.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function loadLicenseRegister(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const data = JSON.parse(event.target.result);
+                licenses = data.licenses || {};
+                updateUI();
+                renderLicenses();
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        }
+
+        // Startlist functions
+        function handleStartlistImport(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const lines = event.target.result.trim().split('\n');
+                if (lines.length < 2) return;
+
+                const headers = lines[0].split(/[,;]/).map(h => h.trim().toLowerCase());
+                startlist = [];
+
+                lines.slice(1).forEach(line => {
+                    if (!line.trim()) return;
+                    const values = line.split(/[,;]/).map(v => v.trim());
+
+                    const uciId = values[headers.indexOf('uci-id')] || values[headers.indexOf('uci')] || '';
+                    const fornamn = values[headers.indexOf('förnamn')] || values[headers.indexOf('fornamn')] || values[headers.indexOf('firstname')] || '';
+                    const efternamn = values[headers.indexOf('efternamn')] || values[headers.indexOf('efternamn')] || values[headers.indexOf('lastname')] || '';
+                    const klubb = values[headers.indexOf('klubb')] || values[headers.indexOf('club')] || '';
+                    const serie = values[headers.indexOf('serie')] || values[headers.indexOf('series')] || '';
+                    const klass = values[headers.indexOf('klass')] || values[headers.indexOf('class')] || '';
+                    const startnummer = values[headers.indexOf('startnummer')] || values[headers.indexOf('startnr')] || values[headers.indexOf('bib')] || '';
+                    const deltavling = values[headers.indexOf('deltävling')] || values[headers.indexOf('deltavling')] || values[headers.indexOf('event')] || '';
+
+                    if (!fornamn || !efternamn) return;
+
+                    startlist.push({
+                        uciId,
+                        fornamn,
+                        efternamn,
+                        klubb,
+                        serie,
+                        klass,
+                        startnummer,
+                        deltavling
+                    });
+                });
+
+                renderStartlist();
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        }
+
+        function renderStartlist() {
+            const tbody = document.getElementById('startlist-body');
+            tbody.innerHTML = '';
+
+            let validCount = 0;
+            let invalidCount = 0;
+
+            startlist.forEach(entry => {
+                const license = licenses[entry.uciId];
+                let statusHTML = '';
+                let rowStyle = '';
+
+                if (!entry.uciId || !license) {
+                    statusHTML = '<span style="color: #ef4444; font-weight: 600;">✗ Ingen licens registrerad</span>';
+                    rowStyle = 'background: #fee2e2;';
+                    invalidCount++;
+                } else {
+                    const status = checkLicenseStatus(license.giltigt_till);
+                    if (status.valid) {
+                        statusHTML = `<span style="color: ${status.color}; font-weight: 600;">✓ Giltig licens (${license.licensklass})</span>`;
+                        rowStyle = 'background: #d1fae5;';
+                        validCount++;
+                    } else {
+                        statusHTML = `<span style="color: ${status.color}; font-weight: 600;">✗ ${status.text}</span>`;
+                        rowStyle = 'background: #fee2e2;';
+                        invalidCount++;
+                    }
+                }
+
+                const tr = document.createElement('tr');
+                tr.style = rowStyle;
+                tr.innerHTML = `
+                    <td style="text-align: center; font-weight: 600;">${entry.startnummer}</td>
+                    <td>${entry.fornamn} ${entry.efternamn}</td>
+                    <td style="font-size: 0.875rem;">${entry.klubb}</td>
+                    <td>${entry.serie}</td>
+                    <td><span class="badge">${entry.klass}</span></td>
+                    <td style="font-size: 0.875rem;">${entry.deltavling}</td>
+                    <td>${statusHTML}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('startlist-count').textContent = startlist.length;
+            document.getElementById('startlist-valid').textContent = validCount;
+            document.getElementById('startlist-invalid').textContent = invalidCount;
+        }
+
+        function exportStartlistReport() {
+            if (startlist.length === 0) {
+                alert('Ingen startlista laddad!');
+                return;
+            }
+
+            const report = startlist.map(entry => {
+                const license = licenses[entry.uciId];
+                let licensStatus = 'Ingen licens';
+
+                if (license) {
+                    const status = checkLicenseStatus(license.giltigt_till);
+                    licensStatus = status.valid ? 'Giltig' : status.text;
+                }
+
+                return {
+                    startnummer: entry.startnummer,
+                    fornamn: entry.fornamn,
+                    efternamn: entry.efternamn,
+                    klubb: entry.klubb,
+                    serie: entry.serie,
+                    klass: entry.klass,
+                    deltavling: entry.deltavling,
+                    uci_id: entry.uciId,
+                    licens_status: licensStatus
+                };
+            });
+
+            const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'startlista_rapport.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function clearStartlist() {
+            if (confirm('Är du säker på att du vill rensa startlistan?')) {
+                startlist = [];
+                renderStartlist();
+            }
         }
 
         // Database tab functions
@@ -1588,7 +1963,8 @@
                 events,
                 serieSettings,
                 invalidResults: Array.from(invalidResults),
-                uploadedFiles
+                uploadedFiles,
+                licenses
             };
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
@@ -1617,6 +1993,7 @@
                 serieSettings = data.serieSettings || {};
                 invalidResults = new Set(data.invalidResults || []);
                 uploadedFiles = data.uploadedFiles || [];
+                licenses = data.licenses || {};
                 updateUI();
             };
             reader.readAsText(file);
@@ -1636,6 +2013,7 @@
                         serieSettings = data.serieSettings || {};
                         invalidResults = new Set(data.invalidResults || []);
                         uploadedFiles = data.uploadedFiles || [];
+                        licenses = data.licenses || {};
                         updateUI();
                     }
                 }
