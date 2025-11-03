@@ -203,10 +203,13 @@
             <div class="info-box" style="margin: 1rem 0; background: #dbeafe;">
                 <p style="font-size: 0.875rem;"><strong>CSV-format för licensregister:</strong></p>
                 <p style="font-size: 0.875rem; margin-top: 0.5rem;">
-                    Kolumner: <code>uci-id, förnamn, efternamn, klubb, licensklass, giltigt_från, giltigt_till</code>
+                    Kolumner: <code>uci-id, Förnamn, Efternamn, klubb, Kategori, licensklass, Födelsedatum</code>
                 </p>
                 <p style="font-size: 0.875rem; margin-top: 0.25rem;">
-                    Exempel: <code>10012345, Anna, Andersson, CK Centrum, Elite, 2024-01-01, 2024-12-31</code>
+                    Exempel: <code>101 388 281 01, Edvin, Ernfors, Järfälla Cykel Klubb, Men, Youth Men, 20090401-4172</code>
+                </p>
+                <p style="font-size: 0.875rem; margin-top: 0.25rem; color: #6b7280;">
+                    OBS: UCI-ID kan innehålla mellanslag (normaliseras automatiskt)
                 </p>
             </div>
 
@@ -217,10 +220,9 @@
                             <th>UCI-ID</th>
                             <th>Namn</th>
                             <th>Klubb</th>
+                            <th>Kategori</th>
                             <th>Licensklass</th>
-                            <th>Giltigt från</th>
-                            <th>Giltigt till</th>
-                            <th>Status</th>
+                            <th>Födelsedatum</th>
                         </tr>
                     </thead>
                     <tbody id="license-body"></tbody>
@@ -1064,6 +1066,11 @@
         }
 
         // License management functions
+        function normalizeUCIID(uciId) {
+            // Remove all spaces and keep only digits
+            return uciId.replace(/\s+/g, '');
+        }
+
         function handleLicenseImport(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -1073,31 +1080,35 @@
                 const lines = event.target.result.trim().split('\n');
                 if (lines.length < 2) return;
 
-                const headers = lines[0].split(/[,;]/).map(h => h.trim().toLowerCase());
+                const headers = lines[0].split(/[\t,;]/).map(h => h.trim().toLowerCase());
                 let importCount = 0;
 
                 lines.slice(1).forEach(line => {
                     if (!line.trim()) return;
-                    const values = line.split(/[,;]/).map(v => v.trim());
+                    const values = line.split(/[\t,;]/).map(v => v.trim());
 
-                    const uciId = values[headers.indexOf('uci-id')] || values[headers.indexOf('uci')] || '';
+                    let uciId = values[headers.indexOf('uci-id')] || values[headers.indexOf('uci')] || '';
                     const fornamn = values[headers.indexOf('förnamn')] || values[headers.indexOf('fornamn')] || values[headers.indexOf('firstname')] || '';
                     const efternamn = values[headers.indexOf('efternamn')] || values[headers.indexOf('efternamn')] || values[headers.indexOf('lastname')] || '';
                     const klubb = values[headers.indexOf('klubb')] || values[headers.indexOf('club')] || '';
+                    const kategori = values[headers.indexOf('kategori')] || values[headers.indexOf('category')] || '';
                     const licensklass = values[headers.indexOf('licensklass')] || values[headers.indexOf('license_class')] || '';
-                    const giltigt_fran = values[headers.indexOf('giltigt_från')] || values[headers.indexOf('giltigt_fran')] || values[headers.indexOf('valid_from')] || '';
-                    const giltigt_till = values[headers.indexOf('giltigt_till')] || values[headers.indexOf('valid_until')] || '';
+                    const fodelsedatum = values[headers.indexOf('födelsedatum')] || values[headers.indexOf('fodelsedatum')] || values[headers.indexOf('birthdate')] || '';
 
                     if (!uciId || !fornamn || !efternamn) return;
 
-                    licenses[uciId] = {
-                        uciId,
+                    // Normalize UCI-ID (remove spaces)
+                    const normalizedUCI = normalizeUCIID(uciId);
+
+                    licenses[normalizedUCI] = {
+                        uciId: normalizedUCI,
+                        originalUCI: uciId, // Keep original format for display
                         fornamn,
                         efternamn,
                         klubb,
+                        kategori,
                         licensklass,
-                        giltigt_fran,
-                        giltigt_till
+                        fodelsedatum
                     };
                     importCount++;
                 });
@@ -1110,20 +1121,10 @@
             e.target.value = '';
         }
 
-        function checkLicenseStatus(giltigt_till) {
-            if (!giltigt_till) return { valid: false, text: 'Ingen giltighetstid', color: '#6b7280' };
-
-            const expiry = new Date(giltigt_till);
-            const today = new Date();
-            const daysUntilExpiry = Math.floor((expiry - today) / (1000 * 60 * 60 * 24));
-
-            if (daysUntilExpiry < 0) {
-                return { valid: false, text: `Utgången (${Math.abs(daysUntilExpiry)} dagar sedan)`, color: '#ef4444' };
-            } else if (daysUntilExpiry < 30) {
-                return { valid: true, text: `Går ut om ${daysUntilExpiry} dagar`, color: '#f59e0b' };
-            } else {
-                return { valid: true, text: `Giltig (${daysUntilExpiry} dagar kvar)`, color: '#10b981' };
-            }
+        function checkLicenseStatus(license) {
+            // All imported licenses are considered valid
+            // In the future, you could add expiry logic here
+            return { valid: true, text: 'Giltig', color: '#10b981' };
         }
 
         function filterLicenses() {
@@ -1144,24 +1145,22 @@
                     const fullName = `${lic.fornamn} ${lic.efternamn}`.toLowerCase();
                     return fullName.includes(term) ||
                            lic.uciId.toLowerCase().includes(term) ||
+                           (lic.originalUCI && lic.originalUCI.toLowerCase().includes(term)) ||
                            lic.klubb.toLowerCase().includes(term) ||
-                           lic.licensklass.toLowerCase().includes(term);
+                           (lic.kategori && lic.kategori.toLowerCase().includes(term)) ||
+                           (lic.licensklass && lic.licensklass.toLowerCase().includes(term));
                 });
             }
 
             licenseList.forEach(lic => {
-                const status = checkLicenseStatus(lic.giltigt_till);
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td style="font-family: monospace; font-size: 0.875rem;">${lic.uciId}</td>
+                    <td style="font-family: monospace; font-size: 0.875rem;">${lic.originalUCI || lic.uciId}</td>
                     <td>${lic.fornamn} ${lic.efternamn}</td>
                     <td style="font-size: 0.875rem;">${lic.klubb}</td>
-                    <td><span class="badge">${lic.licensklass}</span></td>
-                    <td style="font-size: 0.875rem;">${lic.giltigt_fran}</td>
-                    <td style="font-size: 0.875rem;">${lic.giltigt_till}</td>
-                    <td style="color: ${status.color}; font-weight: 600; font-size: 0.875rem;">
-                        ${status.valid ? '✓' : '✗'} ${status.text}
-                    </td>
+                    <td><span class="badge">${lic.kategori || '-'}</span></td>
+                    <td><span class="badge" style="background: #dbeafe;">${lic.licensklass || '-'}</span></td>
+                    <td style="font-size: 0.875rem; font-family: monospace;">${lic.fodelsedatum || '-'}</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -1203,12 +1202,12 @@
                 const lines = event.target.result.trim().split('\n');
                 if (lines.length < 2) return;
 
-                const headers = lines[0].split(/[,;]/).map(h => h.trim().toLowerCase());
+                const headers = lines[0].split(/[\t,;]/).map(h => h.trim().toLowerCase());
                 startlist = [];
 
                 lines.slice(1).forEach(line => {
                     if (!line.trim()) return;
-                    const values = line.split(/[,;]/).map(v => v.trim());
+                    const values = line.split(/[\t,;]/).map(v => v.trim());
 
                     const uciId = values[headers.indexOf('uci-id')] || values[headers.indexOf('uci')] || '';
                     const fornamn = values[headers.indexOf('förnamn')] || values[headers.indexOf('fornamn')] || values[headers.indexOf('firstname')] || '';
@@ -1247,7 +1246,9 @@
             let invalidCount = 0;
 
             startlist.forEach(entry => {
-                const license = licenses[entry.uciId];
+                // Normalize UCI-ID for lookup
+                const normalizedUCI = entry.uciId ? normalizeUCIID(entry.uciId) : '';
+                const license = licenses[normalizedUCI];
                 let statusHTML = '';
                 let rowStyle = '';
 
@@ -1256,9 +1257,10 @@
                     rowStyle = 'background: #fee2e2;';
                     invalidCount++;
                 } else {
-                    const status = checkLicenseStatus(license.giltigt_till);
+                    const status = checkLicenseStatus(license);
                     if (status.valid) {
-                        statusHTML = `<span style="color: ${status.color}; font-weight: 600;">✓ Giltig licens (${license.licensklass})</span>`;
+                        const licenseInfo = license.licensklass ? `${license.licensklass}` : 'Giltig';
+                        statusHTML = `<span style="color: ${status.color}; font-weight: 600;">✓ ${licenseInfo}</span>`;
                         rowStyle = 'background: #d1fae5;';
                         validCount++;
                     } else {
@@ -1294,12 +1296,15 @@
             }
 
             const report = startlist.map(entry => {
-                const license = licenses[entry.uciId];
+                const normalizedUCI = entry.uciId ? normalizeUCIID(entry.uciId) : '';
+                const license = licenses[normalizedUCI];
                 let licensStatus = 'Ingen licens';
+                let licenseClass = '-';
 
                 if (license) {
-                    const status = checkLicenseStatus(license.giltigt_till);
+                    const status = checkLicenseStatus(license);
                     licensStatus = status.valid ? 'Giltig' : status.text;
+                    licenseClass = license.licensklass || '-';
                 }
 
                 return {
@@ -1311,7 +1316,8 @@
                     klass: entry.klass,
                     deltavling: entry.deltavling,
                     uci_id: entry.uciId,
-                    licens_status: licensStatus
+                    licens_status: licensStatus,
+                    licens_klass: licenseClass
                 };
             });
 
