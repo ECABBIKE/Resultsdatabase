@@ -568,9 +568,12 @@
             const reader = new FileReader();
             reader.onload = function(event) {
                 const lines = event.target.result.trim().split('\n');
-                if (lines.length < 2) return;
+                if (lines.length < 2) {
+                    alert('CSV-filen verkar vara tom eller ogiltig!');
+                    return;
+                }
 
-                const headers = lines[0].split(/[,;]/).map(h => h.trim().toLowerCase());
+                const headers = lines[0].split(/[\t,;]/).map(h => h.trim().toLowerCase());
                 let localNextId = nextId;
                 let fileResults = [];
                 let fileSeries = new Set();
@@ -578,16 +581,16 @@
 
                 lines.slice(1).forEach(line => {
                     if (!line.trim()) return;
-                    const values = line.split(/[,;]/).map(v => v.trim());
+                    const values = line.split(/[\t,;]/).map(v => v.trim());
 
-                    const fornamn = values[headers.indexOf('förnamn')] || values[headers.indexOf('firstname')] || '';
+                    const fornamn = values[headers.indexOf('förnamn')] || values[headers.indexOf('fornamn')] || values[headers.indexOf('firstname')] || '';
                     const efternamn = values[headers.indexOf('efternamn')] || values[headers.indexOf('lastname')] || '';
                     const serie = values[headers.indexOf('serie')] || values[headers.indexOf('series')] || '';
                     const klass = values[headers.indexOf('klass')] || values[headers.indexOf('class')] || '';
-                    const deltavling = values[headers.indexOf('deltävling')] || values[headers.indexOf('deltavling')] || '';
+                    const deltavling = values[headers.indexOf('deltävling')] || values[headers.indexOf('deltavling')] || values[headers.indexOf('event')] || '';
                     const placering = parseInt(values[headers.indexOf('placering')] || values[headers.indexOf('position')] || '0');
                     const klubb = values[headers.indexOf('klubb')] || values[headers.indexOf('förening')] || values[headers.indexOf('club')] || '';
-                    const pointSystem = values[headers.indexOf('poängsystem')] || values[headers.indexOf('poang')] || 'ENDURO';
+                    const pointSystem = values[headers.indexOf('poängsystem')] || values[headers.indexOf('poang')] || values[headers.indexOf('point_system')] || 'ENDURO';
                     let uciId = values[headers.indexOf('uci-id')] || values[headers.indexOf('uci')] || '';
                     const tid = values[headers.indexOf('tid')] || values[headers.indexOf('time')] || '';
 
@@ -599,6 +602,8 @@
                     // Find or create rider
                     let riderId = null;
                     if (uciId && !uciId.startsWith('TEMP')) {
+                        // Normalize UCI-ID (remove spaces)
+                        uciId = uciId.replace(/\s+/g, '');
                         const existing = Object.entries(riders).find(([id, r]) => r.uciId === uciId);
                         if (existing) {
                             riderId = existing[0];
@@ -635,6 +640,11 @@
                     fileResults.push(resultData);
                 });
 
+                if (fileResults.length === 0) {
+                    alert('Inga resultat kunde importeras! Kontrollera att CSV-filen har rätt format.');
+                    return;
+                }
+
                 // Track uploaded file
                 uploadedFiles.push({
                     id: Date.now(),
@@ -648,6 +658,7 @@
                 });
 
                 nextId = localNextId;
+                alert(`Importerade ${fileResults.length} resultat från ${file.name}!`);
                 updateUI();
                 autoSaveDataJSON();
             };
