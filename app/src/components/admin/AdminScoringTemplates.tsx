@@ -41,7 +41,16 @@ export default function AdminScoringTemplates() {
 
   const handleEdit = (template: ScoringTemplate) => {
     setEditingId(template.id);
-    setFormData(template);
+    // Only set editable fields, exclude timestamps
+    setFormData({
+      name: template.name,
+      format_type: template.format_type,
+      description: template.description,
+      points_map: template.points_map,
+      dnf_points: template.dnf_points,
+      dns_points: template.dns_points,
+      is_active: template.is_active,
+    });
     // Convert points_map to text format
     const pointsEntries = Object.entries(template.points_map)
       .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))

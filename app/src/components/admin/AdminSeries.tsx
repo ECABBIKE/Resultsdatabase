@@ -74,7 +74,18 @@ export default function AdminSeries() {
 
   const handleEdit = async (serie: Series) => {
     setEditingId(serie.id);
-    setFormData(serie);
+    // Only set editable fields, exclude timestamps
+    setFormData({
+      name: serie.name,
+      year: serie.year,
+      type: serie.type,
+      point_system: serie.point_system,
+      count_best_results: serie.count_best_results,
+      description: serie.description,
+      published: serie.published,
+      club_top_riders_per_class: serie.club_top_riders_per_class,
+      scoring_template_id: serie.scoring_template_id,
+    });
     setIsEditing(true);
 
     // Fetch competitions for this series

@@ -69,7 +69,19 @@ export default function AdminCompetitions() {
 
   const handleEdit = (competition: Competition) => {
     setEditingId(competition.id);
-    setFormData(competition);
+    // Only set editable fields, exclude nested objects and timestamps
+    setFormData({
+      name: competition.name,
+      date: competition.date,
+      competition_format: competition.competition_format,
+      venue_id: competition.venue_id,
+      description: competition.description,
+      status: competition.status,
+      published: competition.published,
+      scoring_template_id: competition.scoring_template_id,
+      dh_seeding_template_id: competition.dh_seeding_template_id,
+      dh_final_template_id: competition.dh_final_template_id,
+    });
     setIsEditing(true);
   };
 
