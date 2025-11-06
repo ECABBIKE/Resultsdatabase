@@ -4,6 +4,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import Competitions from './pages/Competitions';
+import CompetitionDetail from './pages/CompetitionDetail';
 import Series from './pages/Series';
 import Cyclists from './pages/Cyclists';
 import Calendar from './pages/Calendar';
@@ -28,6 +29,7 @@ function App() {
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
             <Route path="competitions" element={<Competitions />} />
+            <Route path="competitions/:id" element={<CompetitionDetail />} />
             <Route path="series" element={<Series />} />
             <Route path="cyclists" element={<Cyclists />} />
             <Route path="calendar" element={<Calendar />} />
