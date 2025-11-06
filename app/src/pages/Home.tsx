@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import { Competition, Series } from '../types/database';
+import type { CompetitionWithVenue, Series } from '../types/database';
 import { formatDateShort, translateFormat, translateStatus, getStatusColor } from '../lib/utils';
 import { Link } from 'react-router-dom';
 
@@ -17,7 +17,7 @@ export default function Home() {
         .limit(5);
 
       if (error) throw error;
-      return data as Competition[];
+      return data as CompetitionWithVenue[];
     },
   });
 
