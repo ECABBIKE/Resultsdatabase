@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import type { Competition, CompetitionClass } from '../types/database';
+import type { Competition } from '../types/database';
 import { formatDateShort, normalizeUCIID } from '../lib/utils';
 import Button from '../components/Button';
 import AdminScoringTemplates from '../components/admin/AdminScoringTemplates';
 import AdminCompetitions from '../components/admin/AdminCompetitions';
 import AdminSeries from '../components/admin/AdminSeries';
+import AdminClasses from '../components/admin/AdminClasses';
 import ImportTemplates from '../components/admin/ImportTemplates';
 
 type Tab = 'scoring' | 'competitions' | 'series' | 'import' | 'cyclists' | 'classes';
@@ -37,19 +38,6 @@ export default function Admin() {
     },
   });
 
-  // Fetch competition classes
-  const { data: classes } = useQuery({
-    queryKey: ['competition-classes'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('competition_classes')
-        .select('*')
-        .order('name');
-
-      if (error) throw error;
-      return data as CompetitionClass[];
-    },
-  });
 
   // Handle CSV file selection for results
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -695,39 +683,7 @@ export default function Admin() {
         )}
 
         {/* Classes Tab */}
-        {activeTab === 'classes' && (
-          <div className="card p-6">
-            <h2 className="text-2xl font-bold text-white mb-4">Klasser</h2>
-            {classes && classes.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {classes.map((cls) => (
-                  <div key={cls.id} className="p-4 bg-dark-700 rounded-lg border border-dark-600">
-                    <span className="text-white font-medium">{cls.name}</span>
-                    {cls.description && (
-                      <p className="text-gray-400 text-sm mt-1">{cls.description}</p>
-                    )}
-                    {(cls.gender || cls.age_group) && (
-                      <div className="flex gap-2 mt-2">
-                        {cls.gender && (
-                          <span className="px-2 py-1 bg-primary-500/20 text-primary-400 text-xs rounded">
-                            {cls.gender}
-                          </span>
-                        )}
-                        {cls.age_group && (
-                          <span className="px-2 py-1 bg-accent-400/20 text-accent-300 text-xs rounded">
-                            {cls.age_group}
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-400">Inga klasser hittades.</p>
-            )}
-          </div>
-        )}
+        {activeTab === 'classes' && <AdminClasses />}
       </div>
     </div>
   );

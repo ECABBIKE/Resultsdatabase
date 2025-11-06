@@ -6,11 +6,37 @@ Denna mapp innehåller CSV-mallar för att importera resultat till systemet.
 
 | Fält | Beskrivning | Exempel |
 |------|-------------|---------|
-| `position` | Placering | 1, 2, 3, ... |
+| `position` | **Placering PER KLASS** (inte global!) | 1, 2, 3, ... |
 | `first_name` / `förnamn` / `firstname` | Förnamn | Erik |
 | `last_name` / `efternamn` / `lastname` | Efternamn | Andersson |
 | `class` / `klass` / `category` | Klass | Elite Men, Elite Women, Junior Men, etc. |
 | `status` | Status | FIN, DNF, DNS, DSQ |
+
+### ⚠️ VIKTIGT: Placering per klass
+
+**Placeringen ska alltid vara per klass, INTE global!**
+
+**Exempel - RÄTT:**
+```csv
+position,first_name,last_name,class
+1,Erik,Andersson,Elite Men     <- 1:a i Elite Men
+2,Johan,Svensson,Elite Men      <- 2:a i Elite Men
+3,Marcus,Berg,Elite Men         <- 3:a i Elite Men
+1,Anna,Karlsson,Elite Women     <- 1:a i Elite Women
+2,Lisa,Johansson,Elite Women    <- 2:a i Elite Women
+1,Oscar,Nilsson,Junior Men      <- 1:a i Junior Men
+```
+
+**Exempel - FEL:**
+```csv
+position,first_name,last_name,class
+1,Erik,Andersson,Elite Men     <- 1:a globalt
+2,Johan,Svensson,Elite Men      <- 2:a globalt
+3,Anna,Karlsson,Elite Women     <- 3:a globalt (FELAKTIGT - ska vara 1 i sin klass!)
+4,Marcus,Berg,Elite Men         <- 4:a globalt (FELAKTIGT - ska vara 3 i sin klass!)
+```
+
+Varje klass har sin egen placering 1, 2, 3 osv.
 
 ## 🔧 Valfria fält (alla format)
 
