@@ -198,7 +198,7 @@ export default function AdminSeries() {
               ? 'bg-green-900/20 border-green-700 text-green-300'
               : message.type === 'error'
               ? 'bg-red-900/20 border-red-700 text-red-300'
-              : 'bg-blue-900/20 border-blue-700 text-blue-300'
+              : 'bg-dark-700 border-dark-600 text-gray-300'
           }`}
         >
           {message.text}
@@ -207,7 +207,7 @@ export default function AdminSeries() {
 
       {/* Edit Form */}
       {isEditing && (
-        <div className="card p-6 border-2 border-orange-500/30">
+        <div className="card p-6 border-2 border-primary-500/30">
           <h3 className="text-lg font-bold text-white mb-4">
             {editingId ? 'Redigera serie' : 'Skapa ny serie'}
           </h3>
@@ -382,7 +382,7 @@ export default function AdminSeries() {
                             {formatDateShort(comp.date)}
                           </span>
                         </div>
-                        <span className="px-2 py-1 bg-orange-900/30 text-orange-400 text-xs rounded">
+                        <span className="px-2 py-1 bg-primary-500/20 text-primary-400 text-xs rounded">
                           {comp.competition_format}
                         </span>
                       </label>

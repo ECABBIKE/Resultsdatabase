@@ -18,7 +18,7 @@ import {
 } from 'recharts';
 import { translateFormat } from '../lib/utils';
 
-const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+const COLORS = ['#EF761F', '#61CE70', '#004a98', '#FFE009', '#437264', '#8A9A5B'];
 
 export default function Statistics() {
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
@@ -271,7 +271,7 @@ export default function Statistics() {
             <div className="text-sm text-gray-400 mt-1">Resultat</div>
           </div>
           <div className="card p-6">
-            <div className="text-3xl font-bold text-blue-400">{overview.series}</div>
+            <div className="text-3xl font-bold text-gsblue-400">{overview.series}</div>
             <div className="text-sm text-gray-400 mt-1">Serier</div>
           </div>
           <div className="card p-6">
@@ -288,13 +288,13 @@ export default function Statistics() {
             <h2 className="text-xl font-bold text-white mb-4">Tävlingar per månad</h2>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={competitionsByMonth}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="month" stroke="#9ca3af" />
-                <YAxis stroke="#9ca3af" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#404040" />
+                <XAxis dataKey="month" stroke="#a3a3a3" />
+                <YAxis stroke="#a3a3a3" />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: '#1e293b',
-                    border: '1px solid #374151',
+                    backgroundColor: '#171717',
+                    border: '1px solid #404040',
                     borderRadius: '0.5rem',
                   }}
                 />
@@ -302,7 +302,7 @@ export default function Statistics() {
                 <Line
                   type="monotone"
                   dataKey="count"
-                  stroke="#3b82f6"
+                  stroke="#EF761F"
                   strokeWidth={2}
                   name="Antal tävlingar"
                 />
@@ -317,18 +317,18 @@ export default function Statistics() {
             <h2 className="text-xl font-bold text-white mb-4">Tävlingar per format</h2>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={competitionsByFormat}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="format" stroke="#9ca3af" />
-                <YAxis stroke="#9ca3af" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#404040" />
+                <XAxis dataKey="format" stroke="#a3a3a3" />
+                <YAxis stroke="#a3a3a3" />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: '#1e293b',
-                    border: '1px solid #374151',
+                    backgroundColor: '#171717',
+                    border: '1px solid #404040',
                     borderRadius: '0.5rem',
                   }}
                 />
                 <Legend />
-                <Bar dataKey="count" fill="#3b82f6" name="Antal" />
+                <Bar dataKey="count" fill="#EF761F" name="Antal" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -347,7 +347,7 @@ export default function Statistics() {
                   labelLine={false}
                   label={(item) => `${item.name}: ${item.value}`}
                   outerRadius={80}
-                  fill="#8884d8"
+                  fill="#EF761F"
                   dataKey="value"
                 >
                   {resultsByStatus.map((_, index) => (
@@ -356,8 +356,8 @@ export default function Statistics() {
                 </Pie>
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: '#1e293b',
-                    border: '1px solid #374151',
+                    backgroundColor: '#171717',
+                    border: '1px solid #404040',
                     borderRadius: '0.5rem',
                   }}
                 />
@@ -372,17 +372,17 @@ export default function Statistics() {
             <h2 className="text-xl font-bold text-white mb-4">Populäraste banor</h2>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={popularVenues} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis type="number" stroke="#9ca3af" />
-                <YAxis dataKey="name" type="category" stroke="#9ca3af" width={100} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#404040" />
+                <XAxis type="number" stroke="#a3a3a3" />
+                <YAxis dataKey="name" type="category" stroke="#a3a3a3" width={100} />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: '#1e293b',
-                    border: '1px solid #374151',
+                    backgroundColor: '#171717',
+                    border: '1px solid #404040',
                     borderRadius: '0.5rem',
                   }}
                 />
-                <Bar dataKey="count" fill="#10b981" name="Antal tävlingar" />
+                <Bar dataKey="count" fill="#61CE70" name="Antal tävlingar" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -413,7 +413,7 @@ export default function Statistics() {
                     <td className="text-right text-gray-300">{cyclist.total_races}</td>
                     <td className="text-right text-green-400">{cyclist.finishes}</td>
                     <td className="text-right text-yellow-400">{cyclist.wins}</td>
-                    <td className="text-right text-orange-400">{cyclist.podiums}</td>
+                    <td className="text-right text-primary-400">{cyclist.podiums}</td>
                   </tr>
                 ))}
               </tbody>

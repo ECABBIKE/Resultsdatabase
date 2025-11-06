@@ -132,7 +132,7 @@ export default function SeriesDetail() {
           </div>
           <span className={`px-3 py-1 rounded text-sm font-medium ${
             series.type === 'individual'
-              ? 'bg-blue-900 text-blue-300'
+              ? 'bg-gsblue-900 text-gsblue-300'
               : 'bg-purple-900 text-purple-300'
           }`}>
             {series.type === 'individual' ? 'Individuell' : 'Klubb'}

@@ -128,7 +128,7 @@ export function getStatusColor(status: string): string {
     case 'ongoing':
       return 'bg-yellow-900 text-yellow-300';
     case 'upcoming':
-      return 'bg-blue-900 text-blue-300';
+      return 'bg-gsblue-900 text-gsblue-300';
     case 'cancelled':
       return 'bg-red-900 text-red-300';
     default:
@@ -176,7 +176,7 @@ export function getResultStatusColor(status: string): string {
     case 'FIN':
       return 'text-green-400';
     case 'DNF':
-      return 'text-orange-400';
+      return 'text-red-400';
     case 'DNS':
       return 'text-gray-400';
     case 'DSQ':

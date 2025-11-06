@@ -7,6 +7,7 @@ import Button from '../components/Button';
 import AdminScoringTemplates from '../components/admin/AdminScoringTemplates';
 import AdminCompetitions from '../components/admin/AdminCompetitions';
 import AdminSeries from '../components/admin/AdminSeries';
+import ImportTemplates from '../components/admin/ImportTemplates';
 
 type Tab = 'scoring' | 'competitions' | 'series' | 'import' | 'cyclists' | 'classes';
 
@@ -381,7 +382,7 @@ export default function Admin() {
             onClick={() => setActiveTab(tab.id)}
             className={`px-5 py-3 font-semibold transition-all duration-200 whitespace-nowrap rounded-t-lg flex items-center gap-2 ${
               activeTab === tab.id
-                ? 'bg-gradient-to-b from-orange-600/20 to-transparent text-orange-400 border-b-2 border-orange-500 translate-y-px'
+                ? 'bg-gradient-to-b from-primary-500/20 to-transparent text-primary-400 border-b-2 border-primary-500 translate-y-px'
                 : 'text-gray-400 hover:text-gray-300 hover:bg-dark-700/50'
             }`}
           >
@@ -402,6 +403,10 @@ export default function Admin() {
         {/* Import Results Tab */}
         {activeTab === 'import' && (
           <div className="space-y-6">
+            {/* Import Templates Section */}
+            <ImportTemplates />
+
+            {/* Import Form */}
             <div className="card p-6">
               <h2 className="text-2xl font-bold text-white mb-4">
                 Importera Resultat från CSV
@@ -485,7 +490,7 @@ export default function Admin() {
                       ? 'bg-green-900/20 border border-green-700'
                       : importStatus.type === 'error'
                       ? 'bg-red-900/20 border border-red-700'
-                      : 'bg-blue-900/20 border border-blue-700'
+                      : 'bg-dark-700 border border-dark-600'
                   }`}
                 >
                   <p
@@ -494,7 +499,7 @@ export default function Admin() {
                         ? 'text-green-300'
                         : importStatus.type === 'error'
                         ? 'text-red-300'
-                        : 'text-blue-300'
+                        : 'text-gray-300'
                     }`}
                   >
                     {importStatus.message}
@@ -542,7 +547,7 @@ export default function Admin() {
                     ? 'bg-green-900/20 border border-green-700'
                     : importStatus.type === 'error'
                     ? 'bg-red-900/20 border border-red-700'
-                    : 'bg-blue-900/20 border border-blue-700'
+                    : 'bg-dark-700 border border-dark-600'
                 }`}
               >
                 <p
@@ -551,7 +556,7 @@ export default function Admin() {
                       ? 'text-green-300'
                       : importStatus.type === 'error'
                       ? 'text-red-300'
-                      : 'text-blue-300'
+                      : 'text-gray-300'
                   }`}
                 >
                   {importStatus.message}
@@ -576,12 +581,12 @@ export default function Admin() {
                     {(cls.gender || cls.age_group) && (
                       <div className="flex gap-2 mt-2">
                         {cls.gender && (
-                          <span className="px-2 py-1 bg-orange-900/30 text-orange-400 text-xs rounded">
+                          <span className="px-2 py-1 bg-primary-500/20 text-primary-400 text-xs rounded">
                             {cls.gender}
                           </span>
                         )}
                         {cls.age_group && (
-                          <span className="px-2 py-1 bg-blue-900/30 text-blue-400 text-xs rounded">
+                          <span className="px-2 py-1 bg-accent-400/20 text-accent-300 text-xs rounded">
                             {cls.age_group}
                           </span>
                         )}

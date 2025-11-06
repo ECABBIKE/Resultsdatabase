@@ -169,7 +169,7 @@ export default function CyclistProfile() {
           </div>
 
           <div className="card p-4">
-            <div className="text-2xl font-bold text-orange-400">
+            <div className="text-2xl font-bold text-primary-400">
               {results.filter(r => r.position <= 3 && r.status === 'FIN').length}
             </div>
             <div className="text-sm text-gray-400">Pallplatser</div>
@@ -225,7 +225,7 @@ export default function CyclistProfile() {
                     <td>
                       <span className={`text-sm ${
                         result.status === 'FIN' ? 'text-green-400' :
-                        result.status === 'DNF' ? 'text-orange-400' :
+                        result.status === 'DNF' ? 'text-red-400' :
                         result.status === 'DNS' ? 'text-gray-400' :
                         'text-red-400'
                       }`}>

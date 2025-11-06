@@ -31,13 +31,13 @@ export default function Button({
 
   const variantClasses = {
     primary:
-      'bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-500 hover:to-orange-400 text-white shadow-lg hover:shadow-xl focus:ring-orange-500 active:scale-95',
+      'bg-gradient-to-r from-primary-500 to-primary-400 hover:from-primary-400 hover:to-primary-500 text-white shadow-lg hover:shadow-xl focus:ring-primary-500 active:scale-95',
     secondary:
       'bg-dark-700 hover:bg-dark-600 text-white border border-dark-600 hover:border-dark-500 focus:ring-primary-500',
     danger:
       'bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white shadow-lg hover:shadow-xl focus:ring-red-500 active:scale-95',
     success:
-      'bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white shadow-lg hover:shadow-xl focus:ring-green-500 active:scale-95',
+      'bg-gradient-to-r from-accent-400 to-accent-500 hover:from-accent-500 hover:to-accent-400 text-white shadow-lg hover:shadow-xl focus:ring-accent-400 active:scale-95',
     ghost:
       'bg-transparent hover:bg-dark-700/50 text-gray-300 hover:text-white border border-transparent hover:border-dark-600',
   };

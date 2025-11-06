@@ -188,7 +188,7 @@ export default function AdminScoringTemplates() {
               ? 'bg-green-900/20 border-green-700 text-green-300'
               : message.type === 'error'
               ? 'bg-red-900/20 border-red-700 text-red-300'
-              : 'bg-blue-900/20 border-blue-700 text-blue-300'
+              : 'bg-dark-700 border-dark-600 text-gray-300'
           }`}
         >
           {message.text}
@@ -197,7 +197,7 @@ export default function AdminScoringTemplates() {
 
       {/* Create/Edit Form */}
       {isCreating && (
-        <div className="card p-6 border-2 border-orange-500/30">
+        <div className="card p-6 border-2 border-primary-500/30">
           <h3 className="text-lg font-bold text-white mb-4">
             {editingId ? 'Redigera mall' : 'Skapa ny mall'}
           </h3>
@@ -342,7 +342,7 @@ export default function AdminScoringTemplates() {
               <div className="flex items-start justify-between mb-3">
                 <div>
                   <h3 className="text-lg font-bold text-white">{template.name}</h3>
-                  <p className="text-sm text-orange-400 font-medium mt-1">
+                  <p className="text-sm text-primary-400 font-medium mt-1">
                     {formatTypeLabels[template.format_type]}
                   </p>
                 </div>
