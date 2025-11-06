@@ -102,6 +102,7 @@ export default function AdminScoringTemplates() {
 
       const templateData = {
         ...formData,
+        description: formData.description || null,
         points_map: pointsMap,
       };
 

@@ -126,18 +126,27 @@ export default function AdminSeries() {
     e.preventDefault();
 
     try {
+      // Clean up formData - convert empty strings to null for nullable fields
+      const cleanData = {
+        ...formData,
+        description: formData.description || null,
+        count_best_results: formData.count_best_results || null,
+        club_top_riders_per_class: formData.club_top_riders_per_class || null,
+        scoring_template_id: formData.scoring_template_id || null,
+      };
+
       let seriesId = editingId;
 
       if (editingId) {
         // Update existing
-        const { error } = await supabase.from('series').update(formData).eq('id', editingId);
+        const { error } = await supabase.from('series').update(cleanData).eq('id', editingId);
 
         if (error) throw error;
       } else {
         // Create new
         const { data, error } = await supabase
           .from('series')
-          .insert(formData)
+          .insert(cleanData)
           .select()
           .single();
 

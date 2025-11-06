@@ -111,18 +111,28 @@ export default function AdminCompetitions() {
     e.preventDefault();
 
     try {
+      // Clean up formData - convert empty strings to null for nullable fields
+      const cleanData = {
+        ...formData,
+        venue_id: formData.venue_id || null,
+        description: formData.description || null,
+        scoring_template_id: formData.scoring_template_id || null,
+        dh_seeding_template_id: formData.dh_seeding_template_id || null,
+        dh_final_template_id: formData.dh_final_template_id || null,
+      };
+
       if (editingId) {
         // Update existing
         const { error } = await supabase
           .from('competitions')
-          .update(formData)
+          .update(cleanData)
           .eq('id', editingId);
 
         if (error) throw error;
         setMessage({ type: 'success', text: 'Tävling uppdaterad!' });
       } else {
         // Create new
-        const { error } = await supabase.from('competitions').insert(formData);
+        const { error } = await supabase.from('competitions').insert(cleanData);
 
         if (error) throw error;
         setMessage({ type: 'success', text: 'Tävling skapad!' });
