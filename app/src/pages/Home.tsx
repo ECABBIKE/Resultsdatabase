@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 
 export default function Home() {
   // Fetch latest competitions
-  const { data: competitions, isLoading: loadingCompetitions } = useQuery({
+  const { data: competitions, isLoading: loadingCompetitions, error: competitionsError } = useQuery({
     queryKey: ['latest-competitions'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -22,7 +22,7 @@ export default function Home() {
   });
 
   // Fetch active series
-  const { data: series, isLoading: loadingSeries } = useQuery({
+  const { data: series, isLoading: loadingSeries, error: seriesError } = useQuery({
     queryKey: ['active-series'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -48,6 +48,28 @@ export default function Home() {
           Din kompletta plattform för mountainbike-tävlingar i Sverige
         </p>
       </div>
+
+      {/* Error Messages */}
+      {(competitionsError || seriesError) && (
+        <div className="card p-6 border-red-700 bg-red-900/20">
+          <h3 className="text-lg font-semibold text-red-400 mb-2">
+            Fel vid hämtning av data
+          </h3>
+          {competitionsError && (
+            <p className="text-sm text-red-300 mb-2">
+              Tävlingar: {competitionsError.message}
+            </p>
+          )}
+          {seriesError && (
+            <p className="text-sm text-red-300">
+              Serier: {seriesError.message}
+            </p>
+          )}
+          <p className="text-xs text-gray-400 mt-4">
+            Kontrollera att Supabase är korrekt konfigurerat och att databasen innehåller data.
+          </p>
+        </div>
+      )}
 
       {/* Latest Competitions */}
       <section>
