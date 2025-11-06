@@ -114,6 +114,8 @@ export interface Result {
   status: ResultStatus;
   bib_number: string | null;
   notes: string | null;
+  run_number: number; // Default 1
+  run_type: string | null; // 'seeding', 'qualification', 'final', 'run1', 'run2', etc.
   created_at: string;
   updated_at: string;
 }

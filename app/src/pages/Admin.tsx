@@ -107,6 +107,23 @@ export default function Admin() {
       const timeIdx = getIndex(['time', 'tid', 'total_time', 'totaltid']);
       const statusIdx = getIndex(['status']);
       const uciIdx = getIndex(['uci_id', 'uci', 'uciid', 'uci-id']);
+      const bibIdx = getIndex(['bib_number', 'bib', 'startnummer']);
+      const runNumberIdx = getIndex(['run_number', 'runnumber', 'åk']);
+      const runTypeIdx = getIndex(['run_type', 'runtype']);
+
+      // Find split/stage columns
+      const splitIndices: number[] = [];
+      const stageIndices: number[] = [];
+
+      for (let i = 1; i <= 4; i++) {
+        const splitIdx = getIndex([`split${i}`, `split_${i}`]);
+        if (splitIdx !== -1) splitIndices.push(splitIdx);
+      }
+
+      for (let i = 1; i <= 15; i++) {
+        const stageIdx = getIndex([`stage${i}`, `stage_${i}`, `sträcka${i}`]);
+        if (stageIdx !== -1) stageIndices.push(stageIdx);
+      }
 
       if (positionIdx === -1 || firstNameIdx === -1 || lastNameIdx === -1) {
         throw new Error('CSV måste innehålla kolumner för: position, förnamn, efternamn');
@@ -186,6 +203,30 @@ export default function Admin() {
 
           const status = statusIdx !== -1 && row[statusIdx] ? row[statusIdx] : 'FIN';
 
+          // Parse bib number
+          const bibNumber = bibIdx !== -1 && row[bibIdx] ? row[bibIdx] : null;
+
+          // Parse run number and type
+          const runNumber = runNumberIdx !== -1 && row[runNumberIdx] ? parseInt(row[runNumberIdx]) : 1;
+          const runType = runTypeIdx !== -1 && row[runTypeIdx] ? row[runTypeIdx] : null;
+
+          // Parse stage/split times
+          const stageTimes: { stage: number; time: string }[] = [];
+
+          // Check for splits (DH format)
+          splitIndices.forEach((idx, i) => {
+            if (row[idx] && row[idx].trim()) {
+              stageTimes.push({ stage: i + 1, time: row[idx] });
+            }
+          });
+
+          // Check for stages (Enduro format)
+          stageIndices.forEach((idx, i) => {
+            if (row[idx] && row[idx].trim()) {
+              stageTimes.push({ stage: i + 1, time: row[idx] });
+            }
+          });
+
           const { error: resultError } = await supabase.from('results').insert({
             competition_id: selectedCompetition,
             cyclist_id: cyclist.id,
@@ -193,6 +234,10 @@ export default function Admin() {
             position: parseInt(row[positionIdx]),
             total_time: totalTime,
             status: status,
+            bib_number: bibNumber,
+            run_number: runNumber,
+            run_type: runType,
+            stage_times: stageTimes.length > 0 ? stageTimes : null,
           });
 
           if (resultError) throw resultError;
@@ -391,8 +436,17 @@ export default function Admin() {
                   className="input w-full"
                 />
                 <p className="text-xs text-gray-500 mt-2">
-                  Fil måste innehålla kolumner: position, förnamn, efternamn. Valfritt: klubb,
-                  klass, tid, status, uci_id
+                  <strong>Obligatoriskt:</strong> position, förnamn, efternamn<br/>
+                  <strong>Valfritt:</strong> klubb, klass, tid, status, uci_id, bib_number, run_number, run_type<br/>
+                  <strong>DH Splits:</strong> split1, split2, split3, split4<br/>
+                  <strong>Enduro Stages:</strong> stage1, stage2, ..., stage15<br/>
+                  <a
+                    href="https://github.com/ECABBIKE/Resultsdatabase/tree/main/import-templates"
+                    target="_blank"
+                    className="text-primary-400 hover:text-primary-300 underline"
+                  >
+                    Se importmallar och dokumentation
+                  </a>
                 </p>
               </div>
 
