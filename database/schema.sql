@@ -387,13 +387,13 @@ CREATE POLICY "Admins can do everything on series"
 -- COMMENTS
 -- ============================================
 
-COMMENT ON TABLE venues IS 'Anläggningar där tävlingar hålls';
-COMMENT ON TABLE cyclists IS 'Registrerade cyklister i systemet';
-COMMENT ON TABLE licensed_cyclists IS 'Import av licensierade cyklister från extern källa';
-COMMENT ON TABLE competitions IS 'Tävlingar';
-COMMENT ON TABLE competition_classes IS 'Tävlingsklasser (Elite Men, Youth Women, etc.)';
-COMMENT ON TABLE series IS 'Serier (cuper) som består av flera tävlingar';
-COMMENT ON TABLE series_competitions IS 'Koppling mellan serier och tävlingar';
-COMMENT ON TABLE results IS 'Resultat från tävlingar';
-COMMENT ON TABLE series_results IS 'Beräknade poäng för resultat i serier';
-COMMENT ON TABLE admin_profiles IS 'Admin-användare metadata';
+COMMENT ON TABLE venues IS 'Venues where competitions are held';
+COMMENT ON TABLE cyclists IS 'Registered cyclists in the system';
+COMMENT ON TABLE licensed_cyclists IS 'Import of licensed cyclists from external source';
+COMMENT ON TABLE competitions IS 'Competitions';
+COMMENT ON TABLE competition_classes IS 'Competition classes (Elite Men, Youth Women, etc.)';
+COMMENT ON TABLE series IS 'Series (cups) consisting of multiple competitions';
+COMMENT ON TABLE series_competitions IS 'Link between series and competitions';
+COMMENT ON TABLE results IS 'Results from competitions';
+COMMENT ON TABLE series_results IS 'Calculated points for results in series';
+COMMENT ON TABLE admin_profiles IS 'Admin user metadata';
