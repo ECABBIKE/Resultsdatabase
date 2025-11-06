@@ -53,6 +53,9 @@ export interface Competition {
   description: string | null;
   status: CompetitionStatus;
   published: boolean;
+  scoring_template_id: string | null;
+  dh_seeding_template_id: string | null;
+  dh_final_template_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -78,6 +81,7 @@ export interface Series {
   description: string | null;
   published: boolean;
   club_top_riders_per_class: number | null;
+  scoring_template_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -133,6 +137,21 @@ export interface AdminProfile {
   full_name: string | null;
   role: AdminRole;
   permissions: Record<string, any> | null; // JSONB
+  created_at: string;
+  updated_at: string;
+}
+
+export type ScoringTemplateFormat = 'enduro' | 'dh_seeding' | 'dh_final' | 'xc';
+
+export interface ScoringTemplate {
+  id: string;
+  name: string;
+  format_type: ScoringTemplateFormat;
+  description: string | null;
+  points_map: Record<string, number>; // JSONB: { "1": 500, "2": 450, ... }
+  dnf_points: number;
+  dns_points: number;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 }
