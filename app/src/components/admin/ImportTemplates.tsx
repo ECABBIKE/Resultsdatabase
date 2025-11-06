@@ -47,7 +47,7 @@ const templates: Template[] = [
 export default function ImportTemplates() {
   const handleDownload = (filename: string) => {
     const link = document.createElement('a');
-    link.href = `/templates/${filename}`;
+    link.href = `${import.meta.env.BASE_URL}templates/${filename}`;
     link.download = filename;
     document.body.appendChild(link);
     link.click();
@@ -62,7 +62,7 @@ export default function ImportTemplates() {
 
   const handleDownloadDocumentation = () => {
     const link = document.createElement('a');
-    link.href = '/templates/README.md';
+    link.href = `${import.meta.env.BASE_URL}templates/README.md`;
     link.download = 'Import-Guide.md';
     document.body.appendChild(link);
     link.click();
