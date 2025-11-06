@@ -1,18 +1,36 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import type { CompetitionWithVenue } from '../types/database';
+import type { CompetitionWithVenue, Series } from '../types/database';
 import { formatDateShort, translateFormat, translateStatus, getStatusColor } from '../lib/utils';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 
 export default function Competitions() {
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
-  const [selectedFormat, setSelectedFormat] = useState<string>('all');
+  const [selectedSeries, setSelectedSeries] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
+
+  const years = [2023, 2024, 2025, 2026];
+
+  // Fetch series for selected year
+  const { data: series } = useQuery({
+    queryKey: ['series-for-year', selectedYear],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('series')
+        .select('id, name')
+        .eq('year', selectedYear)
+        .eq('published', true)
+        .order('name');
+
+      if (error) throw error;
+      return data as Series[];
+    },
+  });
 
   // Fetch competitions
   const { data: competitions, isLoading, error } = useQuery({
-    queryKey: ['competitions', selectedYear, selectedFormat, selectedStatus],
+    queryKey: ['competitions', selectedYear, selectedSeries, selectedStatus],
     queryFn: async () => {
       let query = supabase
         .from('competitions')
@@ -23,9 +41,21 @@ export default function Competitions() {
       // Filter by year
       query = query.gte('date', `${selectedYear}-01-01`).lte('date', `${selectedYear}-12-31`);
 
-      // Filter by format
-      if (selectedFormat !== 'all') {
-        query = query.eq('competition_format', selectedFormat);
+      // Filter by series
+      if (selectedSeries !== 'all') {
+        // Get competitions that are in the selected series
+        const { data: seriesComps } = await supabase
+          .from('series_competitions')
+          .select('competition_id')
+          .eq('series_id', selectedSeries);
+
+        if (seriesComps && seriesComps.length > 0) {
+          const compIds = seriesComps.map((sc) => sc.competition_id);
+          query = query.in('id', compIds);
+        } else {
+          // No competitions in this series, return empty
+          return [];
+        }
       }
 
       // Filter by status
@@ -40,71 +70,127 @@ export default function Competitions() {
     },
   });
 
-  // Get available years (current year +/- 2)
-  const currentYear = new Date().getFullYear();
-  const years = [currentYear - 2, currentYear - 1, currentYear, currentYear + 1];
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-white">Tävlingar</h1>
+        <h1 className="text-3xl font-bold text-white">Resultat</h1>
       </div>
 
       {/* Filters */}
-      <div className="card p-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Year filter */}
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              År
-            </label>
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(Number(e.target.value))}
-              className="input w-full"
-            >
-              {years.map((year) => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
-            </select>
+      <div className="card p-6 space-y-6">
+        {/* Year filter - Buttons */}
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-3">
+            År
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {years.map((year) => (
+              <button
+                key={year}
+                onClick={() => {
+                  setSelectedYear(year);
+                  setSelectedSeries('all'); // Reset series when year changes
+                }}
+                className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                  selectedYear === year
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-dark-700 text-gray-300 hover:bg-dark-600 hover:text-white'
+                }`}
+              >
+                {year}
+              </button>
+            ))}
           </div>
+        </div>
 
-          {/* Format filter */}
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Format
-            </label>
-            <select
-              value={selectedFormat}
-              onChange={(e) => setSelectedFormat(e.target.value)}
-              className="input w-full"
+        {/* Series filter - Buttons */}
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-3">
+            Serie
+          </label>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setSelectedSeries('all')}
+              className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                selectedSeries === 'all'
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-dark-700 text-gray-300 hover:bg-dark-600 hover:text-white'
+              }`}
             >
-              <option value="all">Alla</option>
-              <option value="DH">Downhill</option>
-              <option value="ENDURO">Enduro</option>
-              <option value="XC">Cross Country</option>
-              <option value="OTHER">Annat</option>
-            </select>
+              Alla serier
+            </button>
+            {series?.map((serie) => (
+              <button
+                key={serie.id}
+                onClick={() => setSelectedSeries(serie.id)}
+                className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                  selectedSeries === serie.id
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-dark-700 text-gray-300 hover:bg-dark-600 hover:text-white'
+                }`}
+              >
+                {serie.name}
+              </button>
+            ))}
           </div>
+        </div>
 
-          {/* Status filter */}
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Status
-            </label>
-            <select
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              className="input w-full"
+        {/* Status filter - Buttons */}
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-3">
+            Status
+          </label>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setSelectedStatus('all')}
+              className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                selectedStatus === 'all'
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-dark-700 text-gray-300 hover:bg-dark-600 hover:text-white'
+              }`}
             >
-              <option value="all">Alla</option>
-              <option value="upcoming">Kommande</option>
-              <option value="ongoing">Pågående</option>
-              <option value="completed">Avslutad</option>
-              <option value="cancelled">Inställd</option>
-            </select>
+              Alla
+            </button>
+            <button
+              onClick={() => setSelectedStatus('upcoming')}
+              className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                selectedStatus === 'upcoming'
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-dark-700 text-gray-300 hover:bg-dark-600 hover:text-white'
+              }`}
+            >
+              Kommande
+            </button>
+            <button
+              onClick={() => setSelectedStatus('ongoing')}
+              className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                selectedStatus === 'ongoing'
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-dark-700 text-gray-300 hover:bg-dark-600 hover:text-white'
+              }`}
+            >
+              Pågående
+            </button>
+            <button
+              onClick={() => setSelectedStatus('completed')}
+              className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                selectedStatus === 'completed'
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-dark-700 text-gray-300 hover:bg-dark-600 hover:text-white'
+              }`}
+            >
+              Avslutad
+            </button>
+            <button
+              onClick={() => setSelectedStatus('cancelled')}
+              className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                selectedStatus === 'cancelled'
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-dark-700 text-gray-300 hover:bg-dark-600 hover:text-white'
+              }`}
+            >
+              Inställd
+            </button>
           </div>
         </div>
       </div>
@@ -113,7 +199,7 @@ export default function Competitions() {
       {error && (
         <div className="card p-6 border-red-700 bg-red-900/20">
           <h3 className="text-lg font-semibold text-red-400 mb-2">
-            Fel vid hämtning av tävlingar
+            Fel vid hämtning av resultat
           </h3>
           <p className="text-sm text-red-300">{error.message}</p>
         </div>
@@ -123,7 +209,7 @@ export default function Competitions() {
       {isLoading && (
         <div className="text-center py-12">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
-          <p className="text-gray-400 mt-4">Laddar tävlingar...</p>
+          <p className="text-gray-400 mt-4">Laddar resultat...</p>
         </div>
       )}
 
@@ -133,7 +219,7 @@ export default function Competitions() {
           {competitions.length === 0 ? (
             <div className="card p-8 text-center">
               <p className="text-gray-400">
-                Inga tävlingar hittades för de valda filtren.
+                Inga resultat hittades för de valda filtren.
               </p>
             </div>
           ) : (

@@ -9,7 +9,7 @@ export default function Navigation() {
 
   const navLinks = [
     { path: '/', label: 'Hem' },
-    { path: '/competitions', label: 'Tävlingar' },
+    { path: '/competitions', label: 'Resultat' },
     { path: '/series', label: 'Serier' },
     { path: '/cyclists', label: 'Cyklister' },
     { path: '/calendar', label: 'Kalender' },
