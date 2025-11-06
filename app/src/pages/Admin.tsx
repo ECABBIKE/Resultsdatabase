@@ -141,7 +141,7 @@ export default function Admin() {
         try {
           const firstName = row[firstNameIdx];
           const lastName = row[lastNameIdx];
-          const club = clubIdx !== -1 ? row[clubIdx] : null;
+          let club = clubIdx !== -1 ? row[clubIdx] : null;
           const className = classIdx !== -1 ? row[classIdx] : 'Open';
           let uciId = uciIdx !== -1 ? row[uciIdx] : null;
 
@@ -149,18 +149,52 @@ export default function Admin() {
             uciId = normalizeUCIID(uciId);
           }
 
-          let cyclist;
+          // Normalize club name
+          if (club) {
+            const { data: canonicalClub } = await supabase
+              .rpc('get_canonical_club_name', { club_input: club });
+            club = canonicalClub || club;
+          }
+
+          // Check for existing cyclist (improved duplicate detection)
+          let cyclist = null;
+
+          // 1. Try by UCI ID
           if (uciId) {
             const { data: existing } = await supabase
               .from('cyclists')
               .select('*')
               .eq('uci_id', uciId)
-              .single();
+              .maybeSingle();
 
             cyclist = existing;
           }
 
+          // 2. Try by name (case-insensitive)
           if (!cyclist) {
+            const { data: existing } = await supabase
+              .from('cyclists')
+              .select('*')
+              .ilike('first_name', firstName)
+              .ilike('last_name', lastName)
+              .maybeSingle();
+
+            cyclist = existing;
+          }
+
+          // 3. Create new cyclist if not found
+          if (!cyclist) {
+            // Generate ID if no UCI ID
+            let generatedId = null;
+            let isGeneratedId = false;
+
+            if (!uciId) {
+              const { data: genId } = await supabase
+                .rpc('generate_cyclist_id', { birth_year: null });
+              generatedId = genId;
+              isGeneratedId = true;
+            }
+
             const { data: newCyclist, error: cyclistError } = await supabase
               .from('cyclists')
               .insert({
@@ -168,6 +202,8 @@ export default function Admin() {
                 last_name: lastName,
                 club: club,
                 uci_id: uciId,
+                generated_id: generatedId,
+                is_generated_id: isGeneratedId,
               })
               .select()
               .single();
@@ -268,7 +304,7 @@ export default function Admin() {
     }
   };
 
-  // Handle cyclist CSV import
+  // Handle cyclist CSV import with auto-ID generation, duplicate detection, and club normalization
   const handleCyclistImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -306,32 +342,109 @@ export default function Admin() {
 
         let successCount = 0;
         let errorCount = 0;
+        let duplicateCount = 0;
+        let clubCorrectionCount = 0;
 
         for (let i = 0; i < rows.length; i++) {
           const row = rows[i];
           if (row.length === 0 || !row[0]) continue;
 
           try {
+            const firstName = row[firstNameIdx];
+            const lastName = row[lastNameIdx];
             let uciId = uciIdx !== -1 ? row[uciIdx] : null;
             if (uciId) uciId = normalizeUCIID(uciId);
 
+            const birthDate = birthDateIdx !== -1 ? row[birthDateIdx] : null;
+            let clubName = clubIdx !== -1 ? row[clubIdx] : null;
+
+            // Check for existing cyclist (duplicate detection)
             let existing = null;
+
+            // 1. Check by UCI ID if provided
             if (uciId) {
               const { data } = await supabase
                 .from('cyclists')
                 .select('*')
                 .eq('uci_id', uciId)
-                .single();
+                .maybeSingle();
               existing = data;
             }
 
+            // 2. Check by name + birth date to avoid duplicates
+            if (!existing && birthDate) {
+              const { data } = await supabase
+                .from('cyclists')
+                .select('*')
+                .ilike('first_name', firstName)
+                .ilike('last_name', lastName)
+                .eq('birth_date', birthDate)
+                .maybeSingle();
+
+              if (data) {
+                existing = data;
+                duplicateCount++;
+              }
+            }
+
+            // 3. Check by name only (fuzzy match)
             if (!existing) {
+              const { data } = await supabase
+                .from('cyclists')
+                .select('*')
+                .ilike('first_name', firstName)
+                .ilike('last_name', lastName)
+                .maybeSingle();
+
+              if (data) {
+                // Only consider it a duplicate if names match exactly
+                if (data.first_name.toLowerCase() === firstName.toLowerCase() &&
+                    data.last_name.toLowerCase() === lastName.toLowerCase()) {
+                  existing = data;
+                  duplicateCount++;
+                }
+              }
+            }
+
+            if (!existing) {
+              // Normalize club name using database function
+              if (clubName) {
+                const { data: canonicalClub } = await supabase
+                  .rpc('get_canonical_club_name', { club_input: clubName });
+
+                if (canonicalClub && canonicalClub !== clubName) {
+                  clubCorrectionCount++;
+                }
+                clubName = canonicalClub || clubName;
+              }
+
+              // Generate ID if no UCI ID provided
+              let generatedId = null;
+              let isGeneratedId = false;
+
+              if (!uciId) {
+                // Extract birth year from birth_date if available
+                let birthYear = null;
+                if (birthDate) {
+                  const match = birthDate.match(/(\d{4})/);
+                  if (match) birthYear = parseInt(match[1]);
+                }
+
+                const { data: genId } = await supabase
+                  .rpc('generate_cyclist_id', { birth_year: birthYear });
+
+                generatedId = genId;
+                isGeneratedId = true;
+              }
+
               const { error } = await supabase.from('cyclists').insert({
-                first_name: row[firstNameIdx],
-                last_name: row[lastNameIdx],
+                first_name: firstName,
+                last_name: lastName,
                 uci_id: uciId,
-                club: clubIdx !== -1 ? row[clubIdx] : null,
-                birth_date: birthDateIdx !== -1 ? row[birthDateIdx] : null,
+                generated_id: generatedId,
+                is_generated_id: isGeneratedId,
+                club: clubName,
+                birth_date: birthDate,
                 gender: genderIdx !== -1 ? row[genderIdx] : null,
               });
 
@@ -339,14 +452,21 @@ export default function Admin() {
               successCount++;
             }
           } catch (err: any) {
+            console.error('Import error:', err);
             errorCount++;
           }
         }
 
         queryClient.invalidateQueries({ queryKey: ['cyclists'] });
+
+        let message = `${successCount} cyklister importerade`;
+        if (duplicateCount > 0) message += `, ${duplicateCount} dubletter hoppades över`;
+        if (clubCorrectionCount > 0) message += `, ${clubCorrectionCount} klubbnamn korrigerade`;
+        if (errorCount > 0) message += `, ${errorCount} fel`;
+
         setImportStatus({
           type: 'success',
-          message: `${successCount} cyklister importerade, ${errorCount} hoppades över`,
+          message,
         });
       } catch (err: any) {
         setImportStatus({ type: 'error', message: `Fel: ${err.message}` });
@@ -534,10 +654,18 @@ export default function Admin() {
                 onChange={handleCyclistImport}
                 className="input w-full"
               />
-              <p className="text-xs text-gray-500 mt-2">
-                Fil måste innehålla: förnamn, efternamn. Valfritt: uci_id, klubb, födelsedatum,
-                kön
-              </p>
+              <div className="text-xs text-gray-500 mt-2 space-y-1">
+                <p><strong>Obligatoriska fält:</strong> förnamn, efternamn</p>
+                <p><strong>Valfritt:</strong> uci_id, klubb, födelsedatum, kön</p>
+                <div className="mt-3 p-3 bg-dark-700 rounded border border-dark-600">
+                  <p className="text-accent-400 font-medium mb-1">✨ Automatiska funktioner:</p>
+                  <ul className="list-disc list-inside space-y-1 text-gray-400">
+                    <li><strong>Auto-ID:</strong> Genererar unikt ID (GEN-format) för cyklister utan UCI ID</li>
+                    <li><strong>Dubblettskydd:</strong> Detekterar automatiskt om cyklisten redan finns baserat på namn och födelsedatum</li>
+                    <li><strong>Klubbnormalisering:</strong> Korrigerar automatiskt felstavningar av klubbnamn mot licensregistret</li>
+                  </ul>
+                </div>
+              </div>
             </div>
 
             {importStatus && (

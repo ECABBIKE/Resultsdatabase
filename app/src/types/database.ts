@@ -14,6 +14,8 @@ export interface Venue {
 export interface Cyclist {
   id: string;
   uci_id: string | null;
+  generated_id: string | null;
+  is_generated_id: boolean;
   first_name: string;
   last_name: string;
   club: string | null;
@@ -194,4 +196,13 @@ export interface ResultWithDetails extends Result {
 
 export interface SeriesWithCompetitions extends Series {
   competitions: (SeriesCompetition & { competition: Competition })[];
+}
+
+// Club name normalization
+
+export interface ClubAlias {
+  id: string;
+  canonical_name: string;
+  alias: string;
+  created_at: string;
 }
