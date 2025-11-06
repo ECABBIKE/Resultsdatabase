@@ -8,7 +8,6 @@ import { useState } from 'react';
 export default function Competitions() {
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [selectedSeries, setSelectedSeries] = useState<string>('all');
-  const [selectedStatus, setSelectedStatus] = useState<string>('all');
 
   const years = [2023, 2024, 2025, 2026];
 
@@ -30,7 +29,7 @@ export default function Competitions() {
 
   // Fetch competitions
   const { data: competitions, isLoading, error } = useQuery({
-    queryKey: ['competitions', selectedYear, selectedSeries, selectedStatus],
+    queryKey: ['competitions', selectedYear, selectedSeries],
     queryFn: async () => {
       let query = supabase
         .from('competitions')
@@ -56,11 +55,6 @@ export default function Competitions() {
           // No competitions in this series, return empty
           return [];
         }
-      }
-
-      // Filter by status
-      if (selectedStatus !== 'all') {
-        query = query.eq('status', selectedStatus);
       }
 
       const { data, error } = await query;
@@ -132,65 +126,6 @@ export default function Competitions() {
                 {serie.name}
               </button>
             ))}
-          </div>
-        </div>
-
-        {/* Status filter - Buttons */}
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-3">
-            Status
-          </label>
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => setSelectedStatus('all')}
-              className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-                selectedStatus === 'all'
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-dark-700 text-gray-300 hover:bg-dark-600 hover:text-white'
-              }`}
-            >
-              Alla
-            </button>
-            <button
-              onClick={() => setSelectedStatus('upcoming')}
-              className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-                selectedStatus === 'upcoming'
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-dark-700 text-gray-300 hover:bg-dark-600 hover:text-white'
-              }`}
-            >
-              Kommande
-            </button>
-            <button
-              onClick={() => setSelectedStatus('ongoing')}
-              className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-                selectedStatus === 'ongoing'
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-dark-700 text-gray-300 hover:bg-dark-600 hover:text-white'
-              }`}
-            >
-              Pågående
-            </button>
-            <button
-              onClick={() => setSelectedStatus('completed')}
-              className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-                selectedStatus === 'completed'
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-dark-700 text-gray-300 hover:bg-dark-600 hover:text-white'
-              }`}
-            >
-              Avslutad
-            </button>
-            <button
-              onClick={() => setSelectedStatus('cancelled')}
-              className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-                selectedStatus === 'cancelled'
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-dark-700 text-gray-300 hover:bg-dark-600 hover:text-white'
-              }`}
-            >
-              Inställd
-            </button>
           </div>
         </div>
       </div>
