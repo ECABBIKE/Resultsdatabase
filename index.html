@@ -3,51 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kvalpoäng - Resultat</title>
+    <title>GravitySeries - Kvalpoäng</title>
+    <link rel="stylesheet" href="src/gravity-series.css">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(to bottom right, #eff6ff, #e0e7ff); min-height: 100vh; padding: 1rem; }
-        .container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 0.5rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); padding: 1.5rem; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-        h1 { font-size: 1.875rem; font-weight: bold; }
-        .admin-link { padding: 0.5rem 1rem; background: #6b7280; color: white; text-decoration: none; border-radius: 0.375rem; font-size: 0.875rem; }
-        .admin-link:hover { background: #4b5563; }
-        .tabs { display: flex; gap: 0.5rem; border-bottom: 1px solid #e5e7eb; margin-bottom: 1.5rem; overflow-x: auto; }
-        .tab { padding: 0.5rem 1rem; cursor: pointer; white-space: nowrap; border-bottom: 2px solid transparent; color: #6b7280; }
-        .tab.active { color: #4f46e5; border-bottom-color: #4f46e5; }
-        select { padding: 0.5rem 1rem; border: 1px solid #d1d5db; border-radius: 0.375rem; width: 100%; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
-        th { background: #4f46e5; color: white; padding: 0.5rem; text-align: left; white-space: nowrap; }
-        th.event-col { text-align: center; font-size: 0.75rem; }
-        th.total-col { background: #3730a3; text-align: center; }
-        td { padding: 0.5rem; border-bottom: 1px solid #e5e7eb; }
-        tr:nth-child(even) { background: #f9fafb; }
+        body { padding: var(--gs-space-lg); }
+        .container { max-width: 1400px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--gs-space-xl); }
+        .tabs { display: flex; gap: var(--gs-space-sm); border-bottom: 2px solid var(--gs-border); margin-bottom: var(--gs-space-xl); overflow-x: auto; }
+        .tab { padding: var(--gs-space-md) var(--gs-space-lg); cursor: pointer; white-space: nowrap; border-bottom: 3px solid transparent; color: var(--gs-text-secondary); font-weight: 600; transition: all var(--gs-transition-fast); }
+        .tab:hover { color: var(--gs-primary); }
+        .tab.active { color: var(--gs-primary); border-bottom-color: var(--gs-accent); }
         .overflow-x { overflow-x: auto; }
-        .info-box { background: #dbeafe; padding: 1.5rem; border-radius: 0.375rem; text-align: center; }
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; text-align: center; }
-        .stat-card { padding: 1rem; border-radius: 0.375rem; }
-        .stat-card.blue { background: #dbeafe; }
-        .stat-card.green { background: #d1fae5; }
-        .stat-card.purple { background: #e9d5ff; }
-        .stat-card .number { font-size: 1.5rem; font-weight: bold; }
-        .stat-card .label { font-size: 0.875rem; color: #6b7280; }
-        .badge { display: inline-block; padding: 0.25rem 0.5rem; background: #e0e7ff; border-radius: 0.25rem; font-size: 0.875rem; }
-        .flex-between { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gs-space-lg); margin-bottom: var(--gs-space-lg); }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gs-space-lg); text-align: center; }
+        .stat-card { padding: var(--gs-space-lg); border-radius: var(--gs-radius-lg); }
+        .stat-card.blue { background: var(--gs-primary-light); }
+        .stat-card.green { background: var(--gs-success-light); }
+        .stat-card.purple { background: var(--gs-accent-light); }
+        .stat-card .number { font-size: 2rem; font-weight: bold; color: var(--gs-primary); }
+        .stat-card .label { font-size: 0.875rem; color: var(--gs-text-secondary); margin-top: var(--gs-space-xs); }
         .hidden { display: none; }
-        .event-points { font-weight: bold; color: #4f46e5; }
-        .event-position { font-size: 0.75rem; color: #6b7280; }
-        .load-btn { padding: 0.5rem 1rem; background: #4f46e5; color: white; border: none; border-radius: 0.375rem; cursor: pointer; font-size: 0.875rem; }
-        .load-btn:hover { background: #4338ca; }
+        .event-points { font-weight: bold; color: var(--gs-primary); }
+        .event-position { font-size: 0.75rem; color: var(--gs-text-secondary); }
         input[type="file"] { display: none; }
+        th.event-col { text-align: center; font-size: 0.75rem; }
+        th.total-col { background: var(--gs-accent); text-align: center; }
+        .info-box {
+            background: linear-gradient(135deg, var(--gs-primary-light) 0%, var(--gs-success-light) 100%);
+            padding: var(--gs-space-2xl);
+            border-radius: var(--gs-radius-xl);
+            text-align: center;
+            border: 2px solid var(--gs-border);
+        }
+        .serie-overview {
+            margin-bottom: var(--gs-space-xl);
+            padding: var(--gs-space-lg);
+            border: 2px solid var(--gs-border);
+            border-radius: var(--gs-radius-xl);
+            background: var(--gs-white);
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>📊 Kvalpoäng Resultat</h1>
-            <a href="admin.html" class="admin-link">🔧 Admin</a>
-        </div>
+    <div class="gs-container">
+        <div class="gs-card">
+            <div class="header">
+                <h1 class="gs-h2" style="color: var(--gs-primary);">📊 GravitySeries Kvalpoäng</h1>
+                <a href="admin.html" class="gs-btn gs-btn-primary">🔧 Admin</a>
+            </div>
 
         <div class="tabs">
             <div class="tab active" onclick="switchTab('standings')">📊 Poängställning</div>
@@ -57,24 +60,24 @@
         <!-- Standings Tab -->
         <div id="tab-standings" class="tab-content">
             <div id="no-data" class="info-box">
-                <p style="margin-bottom: 1rem;">Ingen data laddad ännu.</p>
-                <label class="load-btn">
+                <p class="gs-text-lg" style="margin-bottom: var(--gs-space-lg); color: var(--gs-text-primary);">Ingen data laddad ännu.</p>
+                <label class="gs-btn gs-btn-primary gs-btn-lg">
                     📥 Ladda data
                     <input type="file" accept=".json" onchange="loadData(event)">
                 </label>
             </div>
 
             <div id="has-data" class="hidden">
-                <div class="grid-2" style="margin-bottom: 1rem;">
-                    <select id="serie-select" onchange="updateFilters()">
+                <div class="grid-2">
+                    <select id="serie-select" onchange="updateFilters()" class="gs-input">
                         <option value="all">Alla serier</option>
                     </select>
-                    <select id="klass-select" onchange="updateStandings()">
+                    <select id="klass-select" onchange="updateStandings()" class="gs-input">
                         <option value="all">Alla klasser</option>
                     </select>
                 </div>
                 <div class="overflow-x">
-                    <table id="standings-table">
+                    <table id="standings-table" class="gs-table">
                         <thead id="standings-head"></thead>
                         <tbody id="standings-body"></tbody>
                     </table>
@@ -85,6 +88,7 @@
         <!-- Overview Tab -->
         <div id="tab-overview" class="tab-content hidden">
             <div id="overview-content"></div>
+        </div>
         </div>
     </div>
 
@@ -183,23 +187,23 @@
             const selectedSerie = document.getElementById('serie-select').value;
             const eventList = getSortedEvents(selectedSerie, selectedKlass);
 
-            let headerHTML = `<tr><th>Plac</th><th>Namn</th>${selectedKlass === 'all' && selectedSerie !== 'all' ? '<th>Klass</th>' : ''}<th>Klubb</th>`;
-            eventList.forEach(e => { headerHTML += `<th class="event-col">${e}</th>`; });
+            let headerHTML = `<tr><th style="background: var(--gs-primary);">Plac</th><th style="background: var(--gs-primary);">Namn</th>${selectedKlass === 'all' && selectedSerie !== 'all' ? '<th style="background: var(--gs-primary);">Klass</th>' : ''}<th style="background: var(--gs-primary);">Klubb</th>`;
+            eventList.forEach(e => { headerHTML += `<th class="event-col" style="background: var(--gs-success);">${e}</th>`; });
             headerHTML += `<th class="total-col">Total</th></tr>`;
             thead.innerHTML = headerHTML;
 
             tbody.innerHTML = '';
             standings.forEach((r, i) => {
                 const tr = document.createElement('tr');
-                let rowHTML = `<td style="font-weight: bold;">${i + 1}</td><td>${r.fornamn} ${r.efternamn}</td>${selectedKlass === 'all' && selectedSerie !== 'all' ? `<td><span class="badge">${r.klass}</span></td>` : ''}<td style="font-size: 0.875rem;">${r.klubb}</td>`;
+                let rowHTML = `<td style="font-weight: bold;">${i + 1}</td><td>${r.fornamn} ${r.efternamn}</td>${selectedKlass === 'all' && selectedSerie !== 'all' ? `<td><span class="gs-badge gs-badge-primary">${r.klass}</span></td>` : ''}<td class="gs-text-sm">${r.klubb}</td>`;
                 eventList.forEach(e => {
                     if (r.eventResults[e]) {
                         rowHTML += `<td style="text-align: center;"><div class="event-points">${r.eventResults[e].points}p</div><div class="event-position">(${r.eventResults[e].placering})</div></td>`;
                     } else {
-                        rowHTML += `<td style="text-align: center; color: #d1d5db;">-</td>`;
+                        rowHTML += `<td style="text-align: center; color: var(--gs-border);">-</td>`;
                     }
                 });
-                rowHTML += `<td style="font-weight: bold; color: #4f46e5; background: #eff6ff; text-align: center;">${r.total}</td>`;
+                rowHTML += `<td style="font-weight: bold; color: var(--gs-white); background: var(--gs-accent); text-align: center;">${r.total}</td>`;
                 tr.innerHTML = rowHTML;
                 tbody.appendChild(tr);
             });
@@ -233,11 +237,8 @@
                 const uniqueRiders = new Set(serieResults.map(r => r.riderId)).size;
                 const uniqueClasses = new Set(serieResults.map(r => r.klass)).size;
                 const div = document.createElement('div');
-                div.style.marginBottom = '1.5rem';
-                div.style.padding = '1rem';
-                div.style.border = '1px solid #e5e7eb';
-                div.style.borderRadius = '0.375rem';
-                div.innerHTML = `<h3 style="font-size: 1.25rem; font-weight: bold; margin-bottom: 1rem;">${serie}</h3><div class="grid-3"><div class="stat-card blue"><div class="number">${serieEvents.length}</div><div class="label">Events</div></div><div class="stat-card green"><div class="number">${uniqueRiders}</div><div class="label">Deltagare</div></div><div class="stat-card purple"><div class="number">${uniqueClasses}</div><div class="label">Klasser</div></div></div>`;
+                div.className = 'serie-overview';
+                div.innerHTML = `<h3 class="gs-h3" style="margin-bottom: var(--gs-space-lg); color: var(--gs-primary);">${serie}</h3><div class="grid-3"><div class="stat-card blue"><div class="number">${serieEvents.length}</div><div class="label">Events</div></div><div class="stat-card green"><div class="number">${uniqueRiders}</div><div class="label">Deltagare</div></div><div class="stat-card purple"><div class="number">${uniqueClasses}</div><div class="label">Klasser</div></div></div>`;
                 content.appendChild(div);
             });
         }

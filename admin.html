@@ -3,70 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Kvalpoäng Kalkylator</title>
+    <title>GravitySeries Admin - Kvalpoäng Kalkylator</title>
+    <link rel="stylesheet" href="src/gravity-series.css">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(to bottom right, #eff6ff, #e0e7ff); min-height: 100vh; padding: 1rem; }
-        .container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 0.5rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); padding: 1.5rem; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-        h1 { font-size: 1.875rem; font-weight: bold; }
-        .public-link { padding: 0.5rem 1rem; background: #10b981; color: white; text-decoration: none; border-radius: 0.375rem; font-size: 0.875rem; }
-        .public-link:hover { background: #059669; }
-        .tabs { display: flex; gap: 0.5rem; border-bottom: 1px solid #e5e7eb; margin-bottom: 1.5rem; overflow-x: auto; }
-        .tab { padding: 0.5rem 1rem; cursor: pointer; white-space: nowrap; border-bottom: 2px solid transparent; color: #6b7280; }
-        .tab.active { color: #4f46e5; border-bottom-color: #4f46e5; }
-        .btn-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.5rem; margin-bottom: 1rem; }
-        .btn { padding: 0.5rem 1rem; border: none; border-radius: 0.375rem; cursor: pointer; font-size: 0.875rem; font-weight: 500; color: white; text-align: center; }
-        .btn-primary { background: #4f46e5; }
-        .btn-secondary { background: #6b7280; }
-        .btn-success { background: #10b981; }
+        body { padding: var(--gs-space-lg); }
+        .container { max-width: 1400px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--gs-space-xl); }
+        .tabs { display: flex; gap: var(--gs-space-sm); border-bottom: 2px solid var(--gs-border); margin-bottom: var(--gs-space-xl); overflow-x: auto; }
+        .tab { padding: var(--gs-space-md) var(--gs-space-lg); cursor: pointer; white-space: nowrap; border-bottom: 3px solid transparent; color: var(--gs-text-secondary); font-weight: 600; transition: all var(--gs-transition-fast); }
+        .tab:hover { color: var(--gs-primary); }
+        .tab.active { color: var(--gs-primary); border-bottom-color: var(--gs-accent); }
+        .btn-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--gs-space-sm); margin-bottom: var(--gs-space-lg); }
+        .btn { padding: var(--gs-space-sm) var(--gs-space-lg); border: none; border-radius: var(--gs-radius-lg); cursor: pointer; font-size: 0.875rem; font-weight: 600; color: white; text-align: center; transition: all var(--gs-transition-fast); }
+        .btn-primary { background: var(--gs-primary); }
+        .btn-secondary { background: var(--gs-gray); }
+        .btn-success { background: var(--gs-success); }
         .btn-danger { background: #ef4444; }
         .btn-purple { background: #9333ea; }
         .btn-info { background: #0ea5e9; }
-        .btn:hover { opacity: 0.9; }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
         input[type="file"] { display: none; }
-        select, input[type="number"], input[type="text"] { padding: 0.5rem 1rem; border: 1px solid #d1d5db; border-radius: 0.375rem; width: 100%; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
-        th { background: #4f46e5; color: white; padding: 0.5rem; text-align: left; white-space: nowrap; }
-        th.event-col { text-align: center; font-size: 0.75rem; }
-        th.total-col { background: #3730a3; text-align: center; }
-        td { padding: 0.5rem; border-bottom: 1px solid #e5e7eb; }
-        tr:nth-child(even) { background: #f9fafb; }
         .overflow-x { overflow-x: auto; }
-        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; padding: 1rem; z-index: 1000; }
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; padding: var(--gs-space-lg); z-index: 1000; }
         .modal.show { display: flex; }
-        .modal-content { background: white; border-radius: 0.5rem; padding: 1.5rem; max-width: 56rem; width: 100%; max-height: 90vh; overflow-y: auto; }
-        .modal-header { font-size: 1.25rem; font-weight: bold; margin-bottom: 1rem; }
-        .info-box { background: #dbeafe; padding: 1.5rem; border-radius: 0.375rem; }
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; text-align: center; }
-        .stat-card { padding: 1rem; border-radius: 0.375rem; }
-        .stat-card.blue { background: #dbeafe; }
-        .stat-card.green { background: #d1fae5; }
-        .stat-card.purple { background: #e9d5ff; }
-        .stat-card .number { font-size: 1.5rem; font-weight: bold; }
-        .stat-card .label { font-size: 0.875rem; color: #6b7280; }
-        .badge { display: inline-block; padding: 0.25rem 0.5rem; background: #e0e7ff; border-radius: 0.25rem; font-size: 0.875rem; }
-        .flex-between { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-        .icon-btn { padding: 0.25rem 0.5rem; border: none; border-radius: 0.25rem; cursor: pointer; color: white; font-size: 0.75rem; margin-right: 0.25rem; }
+        .modal-content { background: var(--gs-white); border-radius: var(--gs-radius-xl); padding: var(--gs-space-xl); max-width: 56rem; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: var(--gs-shadow-2xl); }
+        .modal-header { font-size: 1.25rem; font-weight: bold; margin-bottom: var(--gs-space-lg); color: var(--gs-primary); }
+        .info-box { background: linear-gradient(135deg, var(--gs-primary-light) 0%, var(--gs-success-light) 100%); padding: var(--gs-space-2xl); border-radius: var(--gs-radius-xl); border: 2px solid var(--gs-border); }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gs-space-lg); }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gs-space-lg); text-align: center; }
+        .stat-card { padding: var(--gs-space-lg); border-radius: var(--gs-radius-lg); }
+        .stat-card.blue { background: var(--gs-primary-light); }
+        .stat-card.green { background: var(--gs-success-light); }
+        .stat-card.purple { background: var(--gs-accent-light); }
+        .stat-card .number { font-size: 2rem; font-weight: bold; color: var(--gs-primary); }
+        .stat-card .label { font-size: 0.875rem; color: var(--gs-text-secondary); margin-top: var(--gs-space-xs); }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--gs-space-lg); }
+        th.event-col { text-align: center; font-size: 0.75rem; }
+        th.total-col { background: var(--gs-accent); text-align: center; }
+        .icon-btn { padding: var(--gs-space-xs) var(--gs-space-sm); border: none; border-radius: var(--gs-radius-sm); cursor: pointer; color: white; font-size: 0.75rem; margin-right: var(--gs-space-xs); transition: all var(--gs-transition-fast); }
+        .icon-btn:hover { opacity: 0.9; transform: translateY(-1px); }
         .btn-edit { background: #3b82f6; }
         .btn-delete { background: #ef4444; }
-        .btn-warn { background: #eab308; }
+        .btn-warn { background: var(--gs-warning); color: var(--gs-text-primary); }
         .hidden { display: none; }
-        .event-points { font-weight: bold; color: #4f46e5; }
-        .event-position { font-size: 0.75rem; color: #6b7280; }
-        .form-group { margin-bottom: 1rem; }
-        .form-group label { display: block; font-weight: 600; margin-bottom: 0.25rem; font-size: 0.875rem; }
-        .rider-results-table { margin-top: 1.5rem; }
-        .rider-results-table h3 { margin-bottom: 0.75rem; font-size: 1.125rem; }
+        .event-points { font-weight: bold; color: var(--gs-primary); }
+        .event-position { font-size: 0.75rem; color: var(--gs-text-secondary); }
+        .form-group { margin-bottom: var(--gs-space-lg); }
+        .form-group label { display: block; font-weight: 600; margin-bottom: var(--gs-space-sm); font-size: 0.875rem; color: var(--gs-text-primary); }
+        .rider-results-table { margin-top: var(--gs-space-xl); }
+        .rider-results-table h3 { margin-bottom: var(--gs-space-md); font-size: 1.125rem; color: var(--gs-primary); }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🔧 Admin - Kvalpoäng Kalkylator</h1>
-            <a href="index.html" class="public-link" target="_blank">📊 Visa offentlig sida</a>
-        </div>
+    <div class="gs-container">
+        <div class="gs-card">
+            <div class="header">
+                <h1 class="gs-h2" style="color: var(--gs-primary);">🔧 GravitySeries Admin</h1>
+                <a href="index.html" class="gs-btn gs-btn-accent" target="_blank">📊 Visa offentlig sida</a>
+            </div>
 
         <div class="tabs">
             <div class="tab active" onclick="switchTab('results')">📊 Poängställning</div>
@@ -99,16 +93,16 @@
             </div>
 
             <div id="has-data" class="hidden">
-                <div class="grid-2" style="margin-bottom: 1rem;">
-                    <select id="serie-select" onchange="updateFilters()">
+                <div class="grid-2">
+                    <select id="serie-select" onchange="updateFilters()" class="gs-input">
                         <option value="all">Alla serier</option>
                     </select>
-                    <select id="klass-select" onchange="updateStandings()">
+                    <select id="klass-select" onchange="updateStandings()" class="gs-input">
                         <option value="all">Alla klasser</option>
                     </select>
                 </div>
                 <div class="overflow-x">
-                    <table id="standings-table">
+                    <table id="standings-table" class="gs-table">
                         <thead id="standings-head">
                             <tr>
                                 <th>Plac</th>
@@ -126,14 +120,14 @@
 
         <!-- Database Tab -->
         <div id="tab-database" class="tab-content hidden">
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-bottom: 1rem;">
-                <select id="db-serie-select" onchange="updateDatabaseFilters()">
+            <div class="gs-grid gs-grid-cols-3" style="margin-bottom: var(--gs-space-lg);">
+                <select id="db-serie-select" onchange="updateDatabaseFilters()" class="gs-input">
                     <option value="all">Alla serier</option>
                 </select>
-                <select id="db-event-select" onchange="updateDatabaseFilters()">
+                <select id="db-event-select" onchange="updateDatabaseFilters()" class="gs-input">
                     <option value="all">Alla events</option>
                 </select>
-                <select id="db-klass-select" onchange="renderDatabase()">
+                <select id="db-klass-select" onchange="renderDatabase()" class="gs-input">
                     <option value="all">Alla klasser</option>
                 </select>
             </div>
@@ -2043,5 +2037,7 @@
         loadDataJSON();
         updateUI();
     </script>
+    </div>
+    </div>
 </body>
 </html>
