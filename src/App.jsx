@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Upload, Download, Calculator, Settings, Users, Trash2, Edit2, X, Check, AlertCircle } from 'lucide-react';
 
 const POINT_SYSTEMS = {
@@ -61,7 +61,7 @@ export default function App() {
         // Find or create rider
         let riderId = null;
         if (uciId && !uciId.startsWith('TEMP')) {
-          const existing = Object.entries(newRiders).find(([id, r]) => r.uciId === uciId);
+          const existing = Object.entries(newRiders).find(([, r]) => r.uciId === uciId);
           if (existing) {
             riderId = existing[0];
           } else {
@@ -69,7 +69,7 @@ export default function App() {
             newRiders[riderId] = { fornamn, efternamn, klubb, uciId };
           }
         } else {
-          const existing = Object.entries(newRiders).find(([id, r]) =>
+          const existing = Object.entries(newRiders).find(([, r]) =>
             r.fornamn.toLowerCase() === fornamn.toLowerCase() &&
             r.efternamn.toLowerCase() === efternamn.toLowerCase() &&
             r.klubb.toLowerCase() === klubb.toLowerCase()
@@ -110,8 +110,8 @@ export default function App() {
     return points[position - 1] || 1;
   };
 
-  // Get standings
-  const getStandings = () => {
+  // Get standings (memoized)
+  const getStandings = useCallback(() => {
     // Filter out invalid results FIRST
     const validResults = results.filter((_, idx) => !invalidResults.has(idx));
     let filtered = validResults;
@@ -149,33 +149,31 @@ export default function App() {
     });
 
     return Object.values(standings).sort((a, b) => b.total - a.total);
-  };
+  }, [results, invalidResults, selectedSerie, selectedKlass, events, serieSettings]);
 
-  // Find duplicates
-  const findDuplicates = () => {
+  // Find duplicates (optimized to O(n) using Map)
+  const findDuplicates = useCallback(() => {
+    const nameMap = new Map();
+
+    // Group riders by name (O(n))
+    Object.entries(riders).forEach(([id, rider]) => {
+      const key = `${rider.fornamn.toLowerCase()}|||${rider.efternamn.toLowerCase()}`;
+      if (!nameMap.has(key)) {
+        nameMap.set(key, []);
+      }
+      nameMap.get(key).push({ id, rider });
+    });
+
+    // Filter out groups with only one rider
     const groups = [];
-    const processed = new Set();
-    const riderList = Object.entries(riders);
-
-    riderList.forEach(([id1, r1]) => {
-      if (processed.has(id1)) return;
-      const group = [{ id: id1, rider: r1 }];
-
-      riderList.forEach(([id2, r2]) => {
-        if (id1 === id2 || processed.has(id2)) return;
-        if (r1.fornamn.toLowerCase() === r2.fornamn.toLowerCase() &&
-            r1.efternamn.toLowerCase() === r2.efternamn.toLowerCase()) {
-          group.push({ id: id2, rider: r2 });
-        }
-      });
-
+    nameMap.forEach((group) => {
       if (group.length > 1) {
-        group.forEach(item => processed.add(item.id));
         groups.push(group);
       }
     });
+
     return groups;
-  };
+  }, [riders]);
 
   const showDuplicateDialog = () => {
     const groups = findDuplicates();
@@ -243,7 +241,7 @@ export default function App() {
     }
   };
 
-  const getSortedResults = () => {
+  const getSortedResults = useCallback(() => {
     return [...results].sort((a, b) => {
       let valA = a[sortField] || '';
       let valB = b[sortField] || '';
@@ -262,7 +260,7 @@ export default function App() {
         return valA < valB ? 1 : -1;
       }
     });
-  };
+  }, [results, sortField, sortDirection]);
 
   // Save edited result
   const saveEditedResult = (index) => {
@@ -291,15 +289,26 @@ export default function App() {
     setEditingResult(null);
   };
 
-  const standings = getStandings();
-  const series = [...new Set(results.map(r => r.serie))];
-  const klasses = selectedSerie === 'all' ? [] : [...new Set(results.filter(r => r.serie === selectedSerie).map(r => r.klass))];
-  const eventList = selectedSerie === 'all' ? [] : [...new Set(results.filter(r => r.serie === selectedSerie && (selectedKlass === 'all' || r.klass === selectedKlass)).map(r => r.deltavling))].sort((a, b) => {
-    const numA = parseInt(a.match(/#?(\d+)/)?.[1] || '999');
-    const numB = parseInt(b.match(/#?(\d+)/)?.[1] || '999');
-    return numA - numB;
-  });
-  const sortedResults = getSortedResults();
+  // Memoized calculations to prevent unnecessary re-renders
+  const standings = useMemo(() => getStandings(), [getStandings]);
+
+  const series = useMemo(() => [...new Set(results.map(r => r.serie))], [results]);
+
+  const klasses = useMemo(() =>
+    selectedSerie === 'all' ? [] : [...new Set(results.filter(r => r.serie === selectedSerie).map(r => r.klass))],
+    [results, selectedSerie]
+  );
+
+  const eventList = useMemo(() =>
+    selectedSerie === 'all' ? [] : [...new Set(results.filter(r => r.serie === selectedSerie && (selectedKlass === 'all' || r.klass === selectedKlass)).map(r => r.deltavling))].sort((a, b) => {
+      const numA = parseInt(a.match(/#?(\d+)/)?.[1] || '999');
+      const numB = parseInt(b.match(/#?(\d+)/)?.[1] || '999');
+      return numA - numB;
+    }),
+    [results, selectedSerie, selectedKlass]
+  );
+
+  const sortedResults = useMemo(() => getSortedResults(), [getSortedResults]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
