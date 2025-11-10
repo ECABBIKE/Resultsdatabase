@@ -1,14 +1,18 @@
 .sidebar {
-  width: 240px;
-  background: #000;
-  padding: 24px;
-  border-right: 1px solid #222;
+  width: 280px;
+  background: linear-gradient(180deg, var(--gs-dark) 0%, var(--gs-gray) 100%);
+  padding: var(--gs-space-xl);
+  border-right: 2px solid var(--gs-border-dark);
+  box-shadow: var(--gs-shadow-xl);
 }
 
 .sidebar h2 {
   margin-top: 0;
-  margin-bottom: 24px;
-  color: #0095ff;
+  margin-bottom: var(--gs-space-xl);
+  color: var(--gs-accent);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
 }
 
 .sidebar ul {
@@ -17,5 +21,21 @@
 }
 
 .sidebar li {
-  margin-bottom: 12px;
+  margin-bottom: var(--gs-space-md);
+}
+
+.sidebar a {
+  display: block;
+  padding: var(--gs-space-md);
+  color: var(--gs-text-light);
+  border-radius: var(--gs-radius-lg);
+  transition: all var(--gs-transition-fast);
+  font-weight: 500;
+}
+
+.sidebar a:hover {
+  background: var(--gs-primary);
+  color: var(--gs-white);
+  transform: translateX(4px);
+  text-decoration: none;
 }

@@ -1,15 +1,19 @@
+@import './gravity-series.css';
+
 body {
   margin: 0;
-  background: #111;
-  color: white;
-  font-family: Inter, sans-serif;
+  background: var(--gs-light);
+  color: var(--gs-text-primary);
+  font-family: var(--gs-font-sans);
 }
 
 a {
-  color: #0095ff;
+  color: var(--gs-primary);
   text-decoration: none;
+  transition: all var(--gs-transition-fast);
 }
 
 a:hover {
+  color: var(--gs-accent);
   text-decoration: underline;
 }
