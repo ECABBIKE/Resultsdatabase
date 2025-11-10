@@ -45,6 +45,6 @@ npm run build
 
 ## 🚢 Deploy
 
-Pushar till branchen deployas automatiskt till GitHub Pages via GitHub Actions.
+Appen deployas automatiskt till GitHub Pages via GitHub Actions när ändringar pushas till branchen.
 
-Live: https://ecabbike.github.io/Resultsdatabase/
+**Live:** https://ecabbike.github.io/Resultsdatabase/
