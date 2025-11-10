@@ -1,8 +1,0 @@
-position,first_name,last_name,club,class,uci_id,bib_number,total_time,split1,split2,split3,split4,status,run_type
-1,Erik,Andersson,Järvsö CK,Elite Men,SWE19920315,101,00:02:32.123,00:00:44.567,00:00:51.234,00:00:35.234,00:00:21.088,FIN,final
-2,Johan,Svensson,Åre CK,Elite Men,SWE19880423,103,00:02:33.456,00:00:44.987,00:00:51.789,00:00:35.456,00:00:21.224,FIN,final
-3,Marcus,Bergström,Falun CK,Junior Men,SWE20051115,105,00:02:34.789,00:00:45.234,00:00:52.123,00:00:35.678,00:00:21.754,FIN,final
-4,Anna,Karlsson,Stockholm MTB,Elite Women,SWE19950612,102,00:02:35.123,00:00:45.456,00:00:52.456,00:00:35.889,00:00:21.322,FIN,final
-5,Lisa,Johansson,Göteborg MTB,Elite Women,SWE19930828,104,00:02:37.456,00:00:46.123,00:00:53.234,00:00:36.234,00:00:21.865,FIN,final
-6,Emma,Lindström,Malung CK,Junior Women,,106,00:02:40.789,00:00:47.234,00:00:54.567,00:00:37.123,00:00:21.865,FIN,final
-7,Oscar,Nilsson,Järvsö CK,Elite Men,,107,,,,,,DNF,final

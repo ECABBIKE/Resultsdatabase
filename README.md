@@ -1,16 +1,50 @@
-# React + Vite
+# Kvalpoäng Kalkylator
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Modern poängkalkylator för cykelserier med GravitySeries design system.
 
-Currently, two official plugins are available:
+## 🚀 Snabbstart
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+```bash
+# Installera dependencies
+npm install
 
-## React Compiler
+# Starta development server
+npm run dev
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+# Bygga för produktion
+npm run build
+```
 
-## Expanding the ESLint configuration
+## 📁 Projektstruktur
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```
+├── src/
+│   ├── App.jsx           # Huvudkomponent med all funktionalitet
+│   ├── main.jsx          # Entry point
+│   ├── index.css         # Tailwind base styles
+│   └── gravity-series.css # GravitySeries design system
+├── public/               # Statiska filer
+├── .github/workflows/    # GitHub Actions för auto-deploy
+└── dist/                 # Build output (genereras av Vite)
+```
+
+## 🎨 Features
+
+- **CSV Import** - Importera tävlingsresultat från CSV
+- **Poängberäkning** - Automatisk beräkning med olika poängsystem
+- **Resultathantering** - Editera, filtrera och hantera resultat
+- **Dubblettdetektering** - Hitta och slå ihop dubbletter
+- **Export/Import** - Spara och ladda data som JSON
+- **GravitySeries Design** - Modern, ljus design
+
+## 🛠️ Teknisk Stack
+
+- React 19 + Vite
+- Tailwind CSS med custom GravitySeries tokens
+- Lucide React ikoner
+
+## 🚢 Deploy
+
+Pushar till branchen deployas automatiskt till GitHub Pages via GitHub Actions.
+
+Live: https://ecabbike.github.io/Resultsdatabase/
