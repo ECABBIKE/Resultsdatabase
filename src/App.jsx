@@ -311,20 +311,20 @@ export default function App() {
   const sortedResults = useMemo(() => getSortedResults(), [getSortedResults]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+    <div className="min-h-screen bg-gs-light p-4">
       {/* Duplicates Dialog */}
       {showDuplicates && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
             <h3 className="text-xl font-bold mb-4">Dubbletter funna</h3>
             {duplicateGroups.length === 0 ? (
-              <p className="text-green-600">Inga dubbletter!</p>
+              <p className="text-gs-success">Inga dubbletter!</p>
             ) : (
               duplicateGroups.map((group, idx) => (
-                <div key={idx} className="mb-4 p-4 bg-yellow-50 border rounded">
+                <div key={idx} className="mb-4 p-4 bg-gs-warning-light border border-gs-warning rounded-gs-lg">
                   <div className="flex justify-between items-start mb-2">
                     <h4 className="font-semibold">Grupp {idx + 1} ({group.length} st)</h4>
-                    <button onClick={() => mergeGroup(group)} className="px-3 py-1 bg-indigo-600 text-white rounded text-sm">
+                    <button onClick={() => mergeGroup(group)} className="px-3 py-1 bg-gs-primary text-white rounded-gs-lg text-sm hover:opacity-90 transition-gs-fast">
                       Slå ihop
                     </button>
                   </div>
@@ -336,7 +336,7 @@ export default function App() {
                 </div>
               ))
             )}
-            <button onClick={() => setShowDuplicates(false)} className="mt-4 px-4 py-2 bg-gray-300 rounded">
+            <button onClick={() => setShowDuplicates(false)} className="mt-4 px-4 py-2 bg-gray-400 text-white rounded-gs-lg hover:bg-gray-500 transition-gs-fast">
               Stäng
             </button>
           </div>
@@ -346,17 +346,17 @@ export default function App() {
       {/* Delete Confirm */}
       {deleteConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+          <div className="bg-white rounded-gs-xl p-6 max-w-md w-full shadow-gs-2xl">
             <h3 className="text-xl font-bold mb-4 text-red-600">Radera resultat?</h3>
-            <p className="mb-4">{deleteConfirm.fornamn} {deleteConfirm.efternamn} - {deleteConfirm.deltavling}</p>
+            <p className="mb-4 text-gs-dark">{deleteConfirm.fornamn} {deleteConfirm.efternamn} - {deleteConfirm.deltavling}</p>
             <div className="flex gap-2">
               <button onClick={() => {
                 setResults(results.filter((_, i) => i !== deleteConfirm.index));
                 setDeleteConfirm(null);
-              }} className="flex-1 px-4 py-2 bg-red-600 text-white rounded">
+              }} className="flex-1 px-4 py-2 bg-red-600 text-white rounded-gs-lg hover:bg-red-700 transition-gs-fast">
                 Radera
               </button>
-              <button onClick={() => setDeleteConfirm(null)} className="flex-1 px-4 py-2 bg-gray-300 rounded">
+              <button onClick={() => setDeleteConfirm(null)} className="flex-1 px-4 py-2 bg-gray-400 text-white rounded-gs-lg hover:bg-gray-500 transition-gs-fast">
                 Avbryt
               </button>
             </div>
@@ -367,17 +367,17 @@ export default function App() {
       {/* Settings Dialog */}
       {showSettings && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <h3 className="text-xl font-bold mb-4">Poängsystem per event</h3>
+          <div className="bg-white rounded-gs-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-gs-2xl">
+            <h3 className="text-xl font-bold mb-4 text-gs-primary">Poängsystem per event</h3>
             {Object.entries(events).map(([key, event]) => (
-              <div key={key} className="mb-4 p-4 bg-gray-50 rounded flex justify-between items-center">
+              <div key={key} className="mb-4 p-4 bg-gs-light rounded-gs-lg border border-gs-border flex justify-between items-center">
                 <div>
-                  <div className="font-semibold">{event.serie} - {event.deltavling}</div>
-                  <div className="text-sm text-gray-600">{event.classes.join(', ')}</div>
+                  <div className="font-semibold text-gs-dark">{event.serie} - {event.deltavling}</div>
+                  <div className="text-sm text-gs-gray">{event.classes.join(', ')}</div>
                 </div>
                 <select value={event.pointSystem} onChange={(e) => {
                   setEvents({ ...events, [key]: { ...event, pointSystem: e.target.value }});
-                }} className="px-3 py-2 border rounded">
+                }} className="px-3 py-2 border border-gs-border rounded-gs-md focus:border-gs-primary focus:ring-2 focus:ring-gs-primary-light transition-gs-fast">
                   <option value="ENDURO">ENDURO</option>
                   <option value="DH Kval">DH Kval</option>
                   <option value="DH RACE">DH RACE</option>
@@ -385,7 +385,7 @@ export default function App() {
                 </select>
               </div>
             ))}
-            <button onClick={() => setShowSettings(false)} className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded">
+            <button onClick={() => setShowSettings(false)} className="mt-4 px-4 py-2 bg-gs-primary text-white rounded-gs-lg hover:opacity-90 transition-gs-fast shadow-gs-md">
               Stäng
             </button>
           </div>
@@ -393,13 +393,13 @@ export default function App() {
       )}
 
       <div className="max-w-7xl mx-auto">
-        <div className="bg-white rounded-lg shadow-xl p-6">
-          <h1 className="text-3xl font-bold mb-6">Kvalpoäng Kalkylator</h1>
+        <div className="bg-white rounded-gs-2xl shadow-gs-2xl p-6">
+          <h1 className="text-3xl font-bold mb-6 text-gs-primary">Kvalpoäng Kalkylator</h1>
 
           {/* Tabs */}
-          <div className="flex gap-2 mb-6 border-b overflow-x-auto">
+          <div className="flex gap-2 mb-6 border-b border-gs-border overflow-x-auto">
             {['results', 'overview', 'manage', 'riders'].map(tab => (
-              <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2 whitespace-nowrap ${activeTab === tab ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-600'}`}>
+              <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2 whitespace-nowrap font-semibold transition-gs-fast ${activeTab === tab ? 'text-gs-primary border-b-2 border-gs-primary' : 'text-gs-gray hover:text-gs-primary'}`}>
                 {tab === 'results' && 'Poängställning'}
                 {tab === 'overview' && 'Översikt'}
                 {tab === 'manage' && 'Hantera'}
@@ -412,60 +412,60 @@ export default function App() {
           {activeTab === 'results' && (
             <>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-4">
-                <label className="px-4 py-2 bg-indigo-600 text-white rounded text-center cursor-pointer text-sm">
+                <label className="px-4 py-2 bg-gs-primary text-white rounded-gs-lg text-center cursor-pointer text-sm font-semibold hover:opacity-90 transition-gs-fast shadow-gs-md">
                   Import CSV
                   <input type="file" accept=".csv" onChange={handleCSVImport} className="hidden" />
                 </label>
-                <button onClick={() => setShowSettings(true)} className="px-4 py-2 bg-gray-600 text-white rounded text-sm">Poängsystem</button>
-                <button onClick={saveData} className="px-4 py-2 bg-green-600 text-white rounded text-sm">Spara</button>
-                <label className="px-4 py-2 bg-purple-600 text-white rounded text-center cursor-pointer text-sm">
+                <button onClick={() => setShowSettings(true)} className="px-4 py-2 bg-gs-gray text-white rounded-gs-lg text-sm font-semibold hover:opacity-90 transition-gs-fast shadow-gs-md">Poängsystem</button>
+                <button onClick={saveData} className="px-4 py-2 bg-gs-success text-white rounded-gs-lg text-sm font-semibold hover:opacity-90 transition-gs-fast shadow-gs-md">Spara</button>
+                <label className="px-4 py-2 bg-gs-accent text-white rounded-gs-lg text-center cursor-pointer text-sm font-semibold hover:opacity-90 transition-gs-fast shadow-gs-md">
                   Ladda
                   <input type="file" accept=".json" onChange={loadData} className="hidden" />
                 </label>
               </div>
 
               {results.length === 0 ? (
-                <div className="bg-blue-50 p-6 rounded">
-                  <p>Importera CSV för att komma igång!</p>
+                <div className="bg-gs-primary-light p-6 rounded-gs-lg border border-gs-primary">
+                  <p className="text-gs-primary font-medium">Importera CSV för att komma igång!</p>
                 </div>
               ) : (
                 <>
                   <div className="grid grid-cols-2 gap-4 mb-4">
-                    <select value={selectedSerie} onChange={(e) => { setSelectedSerie(e.target.value); setSelectedKlass('all'); }} className="px-4 py-2 border rounded">
+                    <select value={selectedSerie} onChange={(e) => { setSelectedSerie(e.target.value); setSelectedKlass('all'); }} className="px-4 py-2 border border-gs-border rounded-gs-lg focus:border-gs-primary focus:ring-2 focus:ring-gs-primary-light transition-gs-fast">
                       <option value="all">Alla serier</option>
                       {series.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
-                    <select value={selectedKlass} onChange={(e) => setSelectedKlass(e.target.value)} disabled={selectedSerie === 'all'} className="px-4 py-2 border rounded">
+                    <select value={selectedKlass} onChange={(e) => setSelectedKlass(e.target.value)} disabled={selectedSerie === 'all'} className="px-4 py-2 border border-gs-border rounded-gs-lg focus:border-gs-primary focus:ring-2 focus:ring-gs-primary-light transition-gs-fast disabled:opacity-50 disabled:cursor-not-allowed">
                       <option value="all">Alla klasser</option>
                       {klasses.map(k => <option key={k} value={k}>{k}</option>)}
                     </select>
                   </div>
 
-                  <div className="overflow-x-auto">
+                  <div className="overflow-x-auto rounded-gs-lg border border-gs-border">
                     <table className="w-full border-collapse">
-                      <thead className="bg-indigo-600 text-white">
+                      <thead className="bg-gradient-to-r from-gs-primary to-gs-success text-white">
                         <tr>
-                          <th className="p-2 text-left">Plac</th>
-                          <th className="p-2 text-left">Namn</th>
-                          {selectedKlass === 'all' && selectedSerie !== 'all' && <th className="p-2 text-left">Klass</th>}
-                          <th className="p-2 text-left">Klubb</th>
-                          {eventList.map(e => <th key={e} className="p-2 text-center text-xs">{e}</th>)}
-                          <th className="p-2 text-center bg-indigo-700">Total</th>
+                          <th className="p-3 text-left font-semibold">Plac</th>
+                          <th className="p-3 text-left font-semibold">Namn</th>
+                          {selectedKlass === 'all' && selectedSerie !== 'all' && <th className="p-3 text-left font-semibold">Klass</th>}
+                          <th className="p-3 text-left font-semibold">Klubb</th>
+                          {eventList.map(e => <th key={e} className="p-3 text-center text-xs font-semibold">{e}</th>)}
+                          <th className="p-3 text-center font-bold bg-gs-primary-dark">Total</th>
                         </tr>
                       </thead>
                       <tbody>
                         {standings.map((r, i) => (
-                          <tr key={i} className={i % 2 === 0 ? 'bg-gray-50' : ''}>
-                            <td className="p-2 font-bold">{i + 1}</td>
-                            <td className="p-2">{r.fornamn} {r.efternamn}</td>
-                            {selectedKlass === 'all' && selectedSerie !== 'all' && <td className="p-2 text-sm"><span className="px-2 py-1 bg-indigo-100 rounded">{r.klass}</span></td>}
-                            <td className="p-2 text-sm">{r.klubb}</td>
+                          <tr key={i} className={`border-b border-gs-border hover:bg-gs-light transition-gs-fast ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                            <td className="p-3 font-bold text-gs-primary">{i + 1}</td>
+                            <td className="p-3 font-medium text-gs-dark">{r.fornamn} {r.efternamn}</td>
+                            {selectedKlass === 'all' && selectedSerie !== 'all' && <td className="p-3 text-sm"><span className="px-2 py-1 bg-gs-primary-light text-gs-primary rounded-full font-medium">{r.klass}</span></td>}
+                            <td className="p-3 text-sm text-gs-gray">{r.klubb}</td>
                             {eventList.map(e => (
-                              <td key={e} className="p-2 text-center text-xs">
-                                {r.eventResults[e] ? <><div className="font-bold">{r.eventResults[e].points}p</div><div className="text-gray-500">({r.eventResults[e].placering})</div></> : '-'}
+                              <td key={e} className="p-3 text-center text-xs">
+                                {r.eventResults[e] ? <><div className="font-bold text-gs-primary">{r.eventResults[e].points}p</div><div className="text-gs-gray">({r.eventResults[e].placering})</div></> : <span className="text-gray-300">-</span>}
                               </td>
                             ))}
-                            <td className="p-2 text-center font-bold text-indigo-700 bg-indigo-50">{r.total}</td>
+                            <td className="p-3 text-center font-bold text-gs-primary bg-gs-primary-light">{r.total}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -483,18 +483,18 @@ export default function App() {
                 const serieEvents = Object.values(events).filter(e => e.serie === serie);
                 const serieResults = results.filter(r => r.serie === serie);
                 return (
-                  <div key={serie} className="mb-6 p-4 border rounded">
+                  <div key={serie} className="mb-6 p-6 border border-gs-border rounded-gs-xl bg-white shadow-gs-lg hover:shadow-gs-xl transition-gs-base">
                     <div className="flex justify-between items-start mb-4">
-                      <h3 className="text-xl font-bold">{serie}</h3>
+                      <h3 className="text-xl font-bold text-gs-primary">{serie}</h3>
                       <div>
-                        <label className="block text-sm mb-1">Räkna bästa:</label>
-                        <input type="number" min="0" value={serieSettings[serie]?.countBest || 0} onChange={(e) => setSerieSettings({ ...serieSettings, [serie]: { countBest: parseInt(e.target.value) || 0 }})} className="w-24 px-2 py-1 border rounded" placeholder="0=alla" />
+                        <label className="block text-sm mb-1 font-semibold text-gs-gray">Räkna bästa:</label>
+                        <input type="number" min="0" value={serieSettings[serie]?.countBest || 0} onChange={(e) => setSerieSettings({ ...serieSettings, [serie]: { countBest: parseInt(e.target.value) || 0 }})} className="w-24 px-3 py-2 border border-gs-border rounded-gs-lg focus:border-gs-primary focus:ring-2 focus:ring-gs-primary-light transition-gs-fast" placeholder="0=alla" />
                       </div>
                     </div>
                     <div className="grid grid-cols-3 gap-4 text-center">
-                      <div className="p-4 bg-indigo-50 rounded"><div className="text-2xl font-bold">{serieEvents.length}</div><div className="text-sm">Events</div></div>
-                      <div className="p-4 bg-green-50 rounded"><div className="text-2xl font-bold">{new Set(serieResults.map(r => r.riderId)).size}</div><div className="text-sm">Deltagare</div></div>
-                      <div className="p-4 bg-purple-50 rounded"><div className="text-2xl font-bold">{new Set(serieResults.map(r => r.klass)).size}</div><div className="text-sm">Klasser</div></div>
+                      <div className="p-4 bg-gs-primary-light rounded-gs-lg border border-gs-primary"><div className="text-2xl font-bold text-gs-primary">{serieEvents.length}</div><div className="text-sm text-gs-gray font-medium">Events</div></div>
+                      <div className="p-4 bg-gs-success-light rounded-gs-lg border border-gs-success"><div className="text-2xl font-bold text-gs-success">{new Set(serieResults.map(r => r.riderId)).size}</div><div className="text-sm text-gs-gray font-medium">Deltagare</div></div>
+                      <div className="p-4 bg-gs-accent-light rounded-gs-lg border border-gs-accent"><div className="text-2xl font-bold text-gs-accent">{new Set(serieResults.map(r => r.klass)).size}</div><div className="text-sm text-gs-gray font-medium">Klasser</div></div>
                     </div>
                   </div>
                 );
@@ -506,40 +506,40 @@ export default function App() {
           {activeTab === 'manage' && (
             <div>
               <div className="mb-4 flex justify-between items-center">
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gs-gray font-medium">
                   Visar {results.length} resultat ({invalidResults.size} markerade som ogiltiga)
                 </p>
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-gs-gray">
                   Klicka på kolumnrubriker för att sortera
                 </div>
               </div>
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto rounded-gs-lg border border-gs-border">
                 <table className="w-full border-collapse text-sm">
-                  <thead className="bg-indigo-600 text-white">
+                  <thead className="bg-gradient-to-r from-gs-primary to-gs-success text-white">
                     <tr>
-                      <th className="p-2 cursor-pointer" onClick={() => sortResults('serie')}>
-                        Serie {sortField === 'serie' && (sortDirection === 'asc' ? '↑' : '↓')}
+                      <th className="p-3 cursor-pointer hover:bg-gs-primary-dark transition-gs-fast" onClick={() => sortResults('serie')}>
+                        <div className="font-semibold">Serie {sortField === 'serie' && (sortDirection === 'asc' ? '↑' : '↓')}</div>
                       </th>
-                      <th className="p-2 cursor-pointer" onClick={() => sortResults('klass')}>
-                        Klass {sortField === 'klass' && (sortDirection === 'asc' ? '↑' : '↓')}
+                      <th className="p-3 cursor-pointer hover:bg-gs-primary-dark transition-gs-fast" onClick={() => sortResults('klass')}>
+                        <div className="font-semibold">Klass {sortField === 'klass' && (sortDirection === 'asc' ? '↑' : '↓')}</div>
                       </th>
-                      <th className="p-2 cursor-pointer" onClick={() => sortResults('deltavling')}>
-                        Event {sortField === 'deltavling' && (sortDirection === 'asc' ? '↑' : '↓')}
+                      <th className="p-3 cursor-pointer hover:bg-gs-primary-dark transition-gs-fast" onClick={() => sortResults('deltavling')}>
+                        <div className="font-semibold">Event {sortField === 'deltavling' && (sortDirection === 'asc' ? '↑' : '↓')}</div>
                       </th>
-                      <th className="p-2 cursor-pointer" onClick={() => sortResults('fornamn')}>
-                        Förnamn {sortField === 'fornamn' && (sortDirection === 'asc' ? '↑' : '↓')}
+                      <th className="p-3 cursor-pointer hover:bg-gs-primary-dark transition-gs-fast" onClick={() => sortResults('fornamn')}>
+                        <div className="font-semibold">Förnamn {sortField === 'fornamn' && (sortDirection === 'asc' ? '↑' : '↓')}</div>
                       </th>
-                      <th className="p-2 cursor-pointer" onClick={() => sortResults('efternamn')}>
-                        Efternamn {sortField === 'efternamn' && (sortDirection === 'asc' ? '↑' : '↓')}
+                      <th className="p-3 cursor-pointer hover:bg-gs-primary-dark transition-gs-fast" onClick={() => sortResults('efternamn')}>
+                        <div className="font-semibold">Efternamn {sortField === 'efternamn' && (sortDirection === 'asc' ? '↑' : '↓')}</div>
                       </th>
-                      <th className="p-2 cursor-pointer" onClick={() => sortResults('klubb')}>
-                        Klubb {sortField === 'klubb' && (sortDirection === 'asc' ? '↑' : '↓')}
+                      <th className="p-3 cursor-pointer hover:bg-gs-primary-dark transition-gs-fast" onClick={() => sortResults('klubb')}>
+                        <div className="font-semibold">Klubb {sortField === 'klubb' && (sortDirection === 'asc' ? '↑' : '↓')}</div>
                       </th>
-                      <th className="p-2 cursor-pointer" onClick={() => sortResults('placering')}>
-                        Plac {sortField === 'placering' && (sortDirection === 'asc' ? '↑' : '↓')}
+                      <th className="p-3 cursor-pointer hover:bg-gs-primary-dark transition-gs-fast" onClick={() => sortResults('placering')}>
+                        <div className="font-semibold">Plac {sortField === 'placering' && (sortDirection === 'asc' ? '↑' : '↓')}</div>
                       </th>
-                      <th className="p-2">Status</th>
-                      <th className="p-2">Åtgärd</th>
+                      <th className="p-3 font-semibold">Status</th>
+                      <th className="p-3 font-semibold">Åtgärd</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -550,31 +550,31 @@ export default function App() {
 
                       if (isEditing) {
                         return (
-                          <tr key={originalIndex} className="bg-yellow-50">
-                            <td className="p-2">{r.serie}</td>
-                            <td className="p-2">
-                              <input id={`edit-klass-${originalIndex}`} type="text" defaultValue={r.klass} className="w-full px-2 py-1 border rounded text-sm" />
+                          <tr key={originalIndex} className="bg-gs-warning-light border-l-4 border-gs-warning">
+                            <td className="p-3 text-gs-dark">{r.serie}</td>
+                            <td className="p-3">
+                              <input id={`edit-klass-${originalIndex}`} type="text" defaultValue={r.klass} className="w-full px-2 py-1 border border-gs-border rounded-gs-md focus:border-gs-primary focus:ring-2 focus:ring-gs-primary-light transition-gs-fast text-sm" />
                             </td>
-                            <td className="p-2">{r.deltavling}</td>
-                            <td className="p-2">
-                              <input id={`edit-fornamn-${originalIndex}`} type="text" defaultValue={r.fornamn} className="w-full px-2 py-1 border rounded text-sm" />
+                            <td className="p-3 text-gs-dark">{r.deltavling}</td>
+                            <td className="p-3">
+                              <input id={`edit-fornamn-${originalIndex}`} type="text" defaultValue={r.fornamn} className="w-full px-2 py-1 border border-gs-border rounded-gs-md focus:border-gs-primary focus:ring-2 focus:ring-gs-primary-light transition-gs-fast text-sm" />
                             </td>
-                            <td className="p-2">
-                              <input id={`edit-efternamn-${originalIndex}`} type="text" defaultValue={r.efternamn} className="w-full px-2 py-1 border rounded text-sm" />
+                            <td className="p-3">
+                              <input id={`edit-efternamn-${originalIndex}`} type="text" defaultValue={r.efternamn} className="w-full px-2 py-1 border border-gs-border rounded-gs-md focus:border-gs-primary focus:ring-2 focus:ring-gs-primary-light transition-gs-fast text-sm" />
                             </td>
-                            <td className="p-2">
-                              <input id={`edit-klubb-${originalIndex}`} type="text" defaultValue={r.klubb} className="w-full px-2 py-1 border rounded text-sm" />
+                            <td className="p-3">
+                              <input id={`edit-klubb-${originalIndex}`} type="text" defaultValue={r.klubb} className="w-full px-2 py-1 border border-gs-border rounded-gs-md focus:border-gs-primary focus:ring-2 focus:ring-gs-primary-light transition-gs-fast text-sm" />
                             </td>
-                            <td className="p-2">
-                              <input id={`edit-placering-${originalIndex}`} type="number" defaultValue={r.placering} className="w-20 px-2 py-1 border rounded text-sm" />
+                            <td className="p-3">
+                              <input id={`edit-placering-${originalIndex}`} type="number" defaultValue={r.placering} className="w-20 px-2 py-1 border border-gs-border rounded-gs-md focus:border-gs-primary focus:ring-2 focus:ring-gs-primary-light transition-gs-fast text-sm" />
                             </td>
-                            <td className="p-2"></td>
-                            <td className="p-2">
+                            <td className="p-3"></td>
+                            <td className="p-3">
                               <div className="flex gap-1">
-                                <button onClick={() => saveEditedResult(originalIndex)} className="p-1 bg-green-600 text-white rounded" title="Spara">
+                                <button onClick={() => saveEditedResult(originalIndex)} className="p-1.5 bg-gs-success text-white rounded-gs-md hover:opacity-90 transition-gs-fast" title="Spara">
                                   <Check size={14} />
                                 </button>
-                                <button onClick={() => setEditingResult(null)} className="p-1 bg-gray-400 text-white rounded" title="Avbryt">
+                                <button onClick={() => setEditingResult(null)} className="p-1.5 bg-gray-400 text-white rounded-gs-md hover:bg-gray-500 transition-gs-fast" title="Avbryt">
                                   <X size={14} />
                                 </button>
                               </div>
@@ -584,30 +584,30 @@ export default function App() {
                       }
 
                       return (
-                        <tr key={originalIndex} className={`${i % 2 === 0 ? 'bg-gray-50' : ''} ${isInvalid ? 'opacity-50 bg-red-50' : ''}`}>
-                          <td className="p-2">{r.serie}</td>
-                          <td className="p-2">{r.klass}</td>
-                          <td className="p-2">{r.deltavling}</td>
-                          <td className="p-2">{r.fornamn}</td>
-                          <td className="p-2">{r.efternamn}</td>
-                          <td className="p-2">{r.klubb}</td>
-                          <td className="p-2 text-center font-semibold">{r.placering}</td>
-                          <td className="p-2 text-center">
-                            {isInvalid && <span className="text-xs text-red-600 font-bold">OGILTIG</span>}
+                        <tr key={originalIndex} className={`border-b border-gs-border hover:bg-gs-light transition-gs-fast ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${isInvalid ? 'opacity-50 bg-red-50' : ''}`}>
+                          <td className="p-3 text-gs-dark">{r.serie}</td>
+                          <td className="p-3 text-gs-dark">{r.klass}</td>
+                          <td className="p-3 text-gs-dark">{r.deltavling}</td>
+                          <td className="p-3 text-gs-dark">{r.fornamn}</td>
+                          <td className="p-3 text-gs-dark">{r.efternamn}</td>
+                          <td className="p-3 text-gs-gray">{r.klubb}</td>
+                          <td className="p-3 text-center font-bold text-gs-primary">{r.placering}</td>
+                          <td className="p-3 text-center">
+                            {isInvalid && <span className="text-xs text-red-600 font-bold bg-red-100 px-2 py-0.5 rounded-full">OGILTIG</span>}
                           </td>
-                          <td className="p-2">
+                          <td className="p-3">
                             <div className="flex gap-1">
-                              <button onClick={() => setEditingResult(originalIndex)} className="p-1 bg-blue-600 text-white rounded" title="Editera">
+                              <button onClick={() => setEditingResult(originalIndex)} className="p-1.5 bg-gs-primary text-white rounded-gs-md hover:opacity-90 transition-gs-fast" title="Editera">
                                 <Edit2 size={12} />
                               </button>
                               <button onClick={() => {
                                 const newInvalid = new Set(invalidResults);
                                 if (newInvalid.has(originalIndex)) newInvalid.delete(originalIndex); else newInvalid.add(originalIndex);
                                 setInvalidResults(newInvalid);
-                              }} className={`p-1 text-xs rounded ${isInvalid ? 'bg-green-600 text-white' : 'bg-yellow-600 text-white'}`} title={isInvalid ? 'Markera giltig' : 'Markera ogiltig'}>
+                              }} className={`p-1.5 text-xs rounded-gs-md transition-gs-fast ${isInvalid ? 'bg-gs-success text-white hover:opacity-90' : 'bg-gs-warning text-gs-dark hover:opacity-90'}`} title={isInvalid ? 'Markera giltig' : 'Markera ogiltig'}>
                                 <AlertCircle size={12} />
                               </button>
-                              <button onClick={() => setDeleteConfirm({ ...r, index: originalIndex })} className="p-1 bg-red-600 text-white text-xs rounded" title="Radera">
+                              <button onClick={() => setDeleteConfirm({ ...r, index: originalIndex })} className="p-1.5 bg-red-600 text-white text-xs rounded-gs-md hover:bg-red-700 transition-gs-fast" title="Radera">
                                 <Trash2 size={12} />
                               </button>
                             </div>
@@ -624,26 +624,30 @@ export default function App() {
           {/* Riders Tab */}
           {activeTab === 'riders' && (
             <div>
-              <button onClick={showDuplicateDialog} className="mb-4 px-4 py-2 bg-purple-600 text-white rounded">
+              <button onClick={showDuplicateDialog} className="mb-4 px-4 py-2 bg-gs-accent text-white rounded-gs-lg font-semibold hover:opacity-90 transition-gs-fast shadow-gs-md">
                 Visa dubbletter
               </button>
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto rounded-gs-lg border border-gs-border">
                 <table className="w-full border-collapse text-sm">
-                  <thead className="bg-indigo-600 text-white">
+                  <thead className="bg-gradient-to-r from-gs-primary to-gs-success text-white">
                     <tr>
-                      <th className="p-2">ID</th>
-                      <th className="p-2">Namn</th>
-                      <th className="p-2">Klubb</th>
-                      <th className="p-2">Resultat</th>
+                      <th className="p-3 text-left font-semibold">ID</th>
+                      <th className="p-3 text-left font-semibold">Namn</th>
+                      <th className="p-3 text-left font-semibold">Klubb</th>
+                      <th className="p-3 text-center font-semibold">Resultat</th>
                     </tr>
                   </thead>
                   <tbody>
                     {Object.entries(riders).map(([id, r], i) => (
-                      <tr key={id} className={i % 2 === 0 ? 'bg-gray-50' : ''}>
-                        <td className="p-2 font-mono text-xs">{id}{id.startsWith('TEMP') && <span className="text-yellow-600"> (Temp)</span>}</td>
-                        <td className="p-2">{r.fornamn} {r.efternamn}</td>
-                        <td className="p-2">{r.klubb}</td>
-                        <td className="p-2">{results.filter(res => res.riderId === id).length}</td>
+                      <tr key={id} className={`border-b border-gs-border hover:bg-gs-light transition-gs-fast ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                        <td className="p-3 font-mono text-xs text-gs-gray">{id}{id.startsWith('TEMP') && <span className="text-gs-warning font-bold"> (Temp)</span>}</td>
+                        <td className="p-3 font-medium text-gs-dark">{r.fornamn} {r.efternamn}</td>
+                        <td className="p-3 text-gs-gray">{r.klubb}</td>
+                        <td className="p-3 text-center">
+                          <span className="inline-flex items-center justify-center px-3 py-1 bg-gs-primary-light text-gs-primary font-bold rounded-full">
+                            {results.filter(res => res.riderId === id).length}
+                          </span>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
