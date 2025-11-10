@@ -1,0 +1,15 @@
+body {
+  margin: 0;
+  background: #111;
+  color: white;
+  font-family: Inter, sans-serif;
+}
+
+a {
+  color: #0095ff;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
