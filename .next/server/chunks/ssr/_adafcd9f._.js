@@ -1,3 +1,0 @@
-module.exports=[62243,a=>{a.n(a.i(49575))},43619,a=>{a.n(a.i(79962))},13718,a=>{a.n(a.i(85523))},18198,a=>{a.n(a.i(45518))},62212,a=>{a.n(a.i(66114))},89354,a=>{"use strict";var b=a.i(7997);function c(){return(0,b.jsxs)("div",{className:"p-8",children:[(0,b.jsx)("h1",{className:"text-3xl font-bold mb-6 text-brand-black",children:"Hantera Event"}),(0,b.jsx)("p",{className:"text-brand-gray",children:"Skapa och hantera tävlingsevent..."})]})}a.s(["default",()=>c])}];
-
-//# sourceMappingURL=_adafcd9f._.js.map
