@@ -1,4 +1,8 @@
+"use client";
+
 import React from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Trophy, Upload, Users, Medal, Home, Calendar, Settings, Award, FileText, Palette } from 'lucide-react';
 
 const navigationItems = [
@@ -28,7 +32,7 @@ function Section({ label, children }) {
   );
 }
 
-function NavButton({ item, active, admin, onClick }) {
+function NavButton({ item, active, admin }) {
   const Icon = item.icon;
 
   const buttonStyle = active
@@ -42,8 +46,8 @@ function NavButton({ item, active, admin, onClick }) {
     : {};
 
   return (
-    <button
-      onClick={() => onClick(item.href)}
+    <Link
+      href={item.href}
       className={`group relative mb-1 flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-300 w-full
         ${active ? "text-white shadow-lg" : "hover:bg-slate-800 text-brand-light"}`}
       style={buttonStyle}
@@ -58,14 +62,14 @@ function NavButton({ item, active, admin, onClick }) {
           className="absolute right-2 h-1.5 w-1.5 animate-pulse rounded-full bg-brand-yellow"
         />
       )}
-    </button>
+    </Link>
   );
 }
 
 export default function Sidebar() {
-  const [activeRoute, setActiveRoute] = React.useState('/results');
+  const pathname = usePathname();
 
-  const isActive = (href) => activeRoute === href;
+  const isActive = (href) => pathname === href;
 
   return (
     <aside
@@ -93,7 +97,6 @@ export default function Sidebar() {
               key={item.title}
               item={item}
               active={isActive(item.href)}
-              onClick={setActiveRoute}
             />
           ))}
         </Section>
@@ -104,7 +107,6 @@ export default function Sidebar() {
               key={item.title}
               item={item}
               active={isActive(item.href)}
-              onClick={setActiveRoute}
               admin
             />
           ))}
