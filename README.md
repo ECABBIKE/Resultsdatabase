@@ -48,3 +48,4 @@ npm run build
 Appen deployas automatiskt till GitHub Pages via GitHub Actions när ändringar pushas till branchen.
 
 **Live:** https://ecabbike.github.io/Resultsdatabase/
+# Test push unlock

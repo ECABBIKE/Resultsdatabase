@@ -1,5 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { Upload, Download, Calculator, Settings, Users, Trash2, Edit2, X, Check, AlertCircle } from 'lucide-react';
+import Sidebar from './components/layout/Sidebar';
+import AppHeader from './components/layout/AppHeader';
 
 const POINT_SYSTEMS = {
   ENDURO: [500,450,425,400,380,360,340,320,300,280,260,240,220,200,190,180,170,160,150,140,135,130,125,120,115,110,105,100,95,90,85,80,75,70,65,60,55,50,45,40,35,30,25,20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1],
@@ -311,7 +313,11 @@ export default function App() {
   const sortedResults = useMemo(() => getSortedResults(), [getSortedResults]);
 
   return (
-    <div className="min-h-screen bg-gs-light p-4">
+    <div className="flex min-h-screen w-full bg-brand-black text-brand-light">
+      <Sidebar />
+      <main className="flex-1 flex flex-col">
+        <AppHeader />
+        <div className="flex-1 overflow-auto bg-brand-light p-4">
       {/* Duplicates Dialog */}
       {showDuplicates && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -657,6 +663,8 @@ export default function App() {
           )}
         </div>
       </div>
+        </div>
+      </main>
     </div>
   );
 }
