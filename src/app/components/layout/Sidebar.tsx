@@ -1,18 +1,24 @@
 "use client";
 
-import React from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Trophy, Upload, Users, Medal, Home, Calendar, Settings, Award, FileText, Palette } from 'lucide-react';
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Trophy, Upload, Users, Medal, Home, Calendar, Settings, Award, FileText, Palette } from "lucide-react";
 
-const navigationItems = [
+type NavItem = {
+  title: string;
+  href: string;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+};
+
+const navigationItems: NavItem[] = [
   { title: "Hem",           href: "/dashboard",         icon: Home },
   { title: "Tävlingar",     href: "/results",           icon: Trophy },
   { title: "Serietabeller", href: "/series/standings",  icon: Medal },
   { title: "Cyklister",     href: "/riders",            icon: Users },
 ];
 
-const adminItems = [
+const adminItems: NavItem[] = [
   { title: "Exportera Design",    href: "/admin/theme-export",     icon: Palette },
   { title: "Importmallar",        href: "/admin/import-templates", icon: FileText },
   { title: "Hantera Event",       href: "/admin/events",           icon: Calendar },
@@ -21,7 +27,7 @@ const adminItems = [
   { title: "Ladda upp resultat",  href: "/admin/upload",           icon: Upload },
 ];
 
-function Section({ label, children }) {
+function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="mb-4">
       <div className="text-xs font-semibold uppercase tracking-wider px-3 py-3 text-brand-yellow">
@@ -32,7 +38,7 @@ function Section({ label, children }) {
   );
 }
 
-function NavButton({ item, active, admin }) {
+function NavButton({ item, active, admin }: { item: NavItem; active: boolean; admin?: boolean }) {
   const Icon = item.icon;
 
   const buttonStyle = active
@@ -69,7 +75,7 @@ function NavButton({ item, active, admin }) {
 export default function Sidebar() {
   const pathname = usePathname();
 
-  const isActive = (href) => pathname === href;
+  const isActive = (href: string) => pathname === href;
 
   return (
     <aside
@@ -78,9 +84,11 @@ export default function Sidebar() {
     >
       <div className="border-b p-6" style={{ borderColor: "#323539" }}>
         <div className="flex flex-col gap-3 items-center">
-          <img
+          <Image
             src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/690747c6a611d883c6ee363c/f5b51581e_GravitySeries.pdf"
             alt="Gravity Series"
+            width={240}
+            height={64}
             className="h-16 w-auto object-contain invert"
           />
           <div className="text-center">
